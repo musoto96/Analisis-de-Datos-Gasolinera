@@ -1,13 +1,16 @@
 library(shiny)
 library(shinydashboard)
 library(shinydashboardPlus)
-library(shinythemes)
 library(magrittr)
-library(kableExtra)
-library(DT)
 library(xtable)
 library(plotly)
 library(utf8)
+library(FactoMineR)
+library(factoextra)
+library(tidyr)
+library(ggbiplot)
+
+
 
 options(scipen=999)
 
@@ -26,7 +29,10 @@ if(interactive()){
                menuSubItem("Región B", tabName = "RegiónB", icon = shiny::icon("stream")),
                menuSubItem("Región C", tabName = "RegiónC", icon = shiny::icon("stream"))
       ),
-      menuItem("Avanzado", tabName = "Avanzado", icon = icon("laptop-code")),
+      menuItem("Avanzado", tabName = "Avanzado", icon = icon("laptop-code"),
+               menuSubItem("PCA", tabName = "PCA", icon = shiny::icon("stream")),
+               menuSubItem("Pronostico", tabName = "Pronostico", icon = shiny::icon("stream")),
+               menuSubItem("Ventas-vs-Precio", tabName = "Ventas-vs-Precio", icon = shiny::icon("stream"))),
       dateRangeInput(inputId = "filtro", 
                      label = "Periodo:",
                      min = min(datos$Fecha),
@@ -37,36 +43,43 @@ if(interactive()){
                      separator = "A",
                      format = "dd-mm-yyyy"
                      
+      ),
+      sliderInput(inputId = "filtro2",
+                  label = "Periodo",
+                  min = as.Date(min(datos$Fecha)),
+                  max = Sys.Date(),
+                  value = as.Date(c("2020-01-01","2020-12-31")),
+                  animate = TRUE
       )
     )})
   
-  datosFijos <- dplyr::filter(.data = datos, Fecha >= "2020-01-01" & Fecha <= "2020-12-31")
+    datosFijos <- dplyr::filter(.data = datos, Fecha >= "2020-01-01" & Fecha <= "2020-12-31")
   
   datosFijosA <- dplyr::select(.data = datosFijos, Región, Fecha, Producto, Margen, Pesos, Costo, Litros, Importe, PrecioLitro) %>% 
     dplyr::filter(Región=="A") %>%
-    dplyr::summarise(Utilidad = round(sum(Margen)/1000,0),
-                     Ventas = round(sum(Pesos)/1000,0),
-                     Costos = round(sum(Costo)/1000,0),
-                     Litros = round(sum(Litros)/1000,0),
-                     Despachos = round(sum(Importe)/1000,0),
+    dplyr::summarise(Utilidad = round(sum(Margen),0),
+                     Ventas = round(sum(Pesos),0),
+                     Costos = round(sum(Costo),0),
+                     Litros = round(sum(Litros),0),
+                     Despachos = round(sum(Importe),0),
                      Precio = round(mean(PrecioLitro),2))
   
   datosFijosB <- dplyr::select(.data = datosFijos, Región, Fecha, Producto, Margen, Pesos, Costo, Litros, Importe, PrecioLitro) %>% 
     dplyr::filter(Región=="B") %>%
-    dplyr::summarise(Utilidad = round(sum(Margen)/1000,0),
-                     Ventas = round(sum(Pesos)/1000,0),
-                     Costos = round(sum(Costo)/1000,0),
-                     Litros = round(sum(Litros)/1000,0),
-                     Despachos = round(sum(Importe)/1000,0),
+    dplyr::summarise(Utilidad = round(sum(Margen),0),
+                     Ventas = round(sum(Pesos),0),
+                     Costos = round(sum(Costo),0),
+                     Litros = round(sum(Litros),0),
+                     Despachos = round(sum(Importe),0),
                      Precio = round(mean(PrecioLitro),2))
   
   datosFijosC <- dplyr::select(.data = datosFijos, Región, Fecha, Producto, Margen, Pesos, Costo, Litros, Importe, PrecioLitro) %>% 
     dplyr::filter(Región=="C") %>%
-    dplyr::summarise(Utilidad = round(sum(Margen)/1000,0),
-                     Ventas = round(sum(Pesos)/1000,0),
-                     Costos = round(sum(Costo)/1000,0),
-                     Litros = round(sum(Litros)/1000,0),
-                     Despachos = round(sum(Importe)/1000,0),
+    dplyr::summarise(Utilidad = round(sum(Margen),0),
+                     Ventas = round(sum(Pesos),0),
+                     Costos = round(sum(Costo),0),
+                     Litros = round(sum(Litros),0),
+                     Despachos = round(sum(Importe),0),
                      Precio = round(mean(PrecioLitro),2))
   
   datosFijosA <- format(datosFijosA, big.mark = ",")
@@ -87,7 +100,7 @@ if(interactive()){
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = tableOutput("UtilidadA"),
+                  footer = div(tableOutput("UtilidadA"),style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosA[1], "   Anual")
                 ),
@@ -97,7 +110,7 @@ if(interactive()){
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = tableOutput("VentasA"),
+                  footer = div(tableOutput("VentasA"),style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosA[2], "   Anual")
                 ),
@@ -107,7 +120,7 @@ if(interactive()){
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = tableOutput("CostosA"),
+                  footer = div(tableOutput("CostosA"),style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosA[3], "   Anual")
                 ),
@@ -117,7 +130,7 @@ if(interactive()){
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = tableOutput("LitrosA"),
+                  footer = div(tableOutput("LitrosA"),style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosA[4], "   Anual")
                 ),
@@ -127,7 +140,7 @@ if(interactive()){
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = tableOutput("DespachoA"),
+                  footer = div(tableOutput("DespachoA"),style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosA[5], "   Anual")
                 ),
@@ -137,7 +150,7 @@ if(interactive()){
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = tableOutput("PrecioA"),
+                  footer = div(tableOutput("PrecioA"),style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosA[6], "   Anual")
                 ),
@@ -151,9 +164,9 @@ if(interactive()){
                 ),
                 boxPlus(tabBox(
                   width = 15,
-                  tabPanel(title = "Diesel", status = "primary", tableOutput("SucursalAAd")),
-                  tabPanel(title = "Super", status = "primary", tableOutput("SucursalAAs")),
-                  tabPanel(title = "VPower", status = "primary", tableOutput("SucursalAAv"))),
+                  tabPanel(title = "Diesel", status = "primary", div(tableOutput("SucursalAAd"),style="font-size:90%")),
+                  tabPanel(title = "Super", status = "primary", div(tableOutput("SucursalAAs"),style="font-size:90%")),
+                  tabPanel(title = "VPower", status = "primary", div(tableOutput("SucursalAAv"),style="font-size:90%"))),
                   title = "Sucursales con mayores ventas",
                   width = 4,
                   collapsible = TRUE,
@@ -162,9 +175,9 @@ if(interactive()){
                   footer_padding = FALSE),
                 boxPlus(tabBox(
                   width = 15,
-                  tabPanel(title = "Diesel", status = "primary", tableOutput("SucursalABd")),
-                  tabPanel(title = "Super", status = "primary", tableOutput("SucursalABs")),
-                  tabPanel(title = "VPower", status = "primary", tableOutput("SucursalABv"))),
+                  tabPanel(title = "Diesel", status = "primary", div(tableOutput("SucursalABd"),style="font-size:90%")),
+                  tabPanel(title = "Super", status = "primary", div(tableOutput("SucursalABs"),style="font-size:90%")),
+                  tabPanel(title = "VPower", status = "primary", div(tableOutput("SucursalABv"),style="font-size:90%"))),
                   title = "Sucursales con menores ventas",
                   width = 4,
                   collapsible = TRUE,
@@ -190,7 +203,7 @@ if(interactive()){
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = tableOutput(outputId = "UtilidadB"),
+                  footer = div(tableOutput(outputId = "UtilidadB"),style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosB[1], "   Anual")
                 ),
@@ -200,7 +213,7 @@ if(interactive()){
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = tableOutput("VentasB"),
+                  footer = div(tableOutput("VentasB"),style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosB[2], "   Anual")
                 ),
@@ -210,7 +223,7 @@ if(interactive()){
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = tableOutput("CostosB"),
+                  footer = div(tableOutput("CostosB"),style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosB[3], "   Anual")
                 ),
@@ -220,7 +233,7 @@ if(interactive()){
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = tableOutput("LitrosB"),
+                  footer = div(tableOutput("LitrosB"),style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosB[4], "   Anual")
                 ),
@@ -230,7 +243,7 @@ if(interactive()){
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = tableOutput("DespachoB"),
+                  footer = div(tableOutput("DespachoB"),style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosB[5], "   Anual")
                 ),
@@ -240,7 +253,7 @@ if(interactive()){
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = tableOutput("PrecioB"),
+                  footer = div(tableOutput("PrecioB"),style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosB[6], "   Anual")
                 ),
@@ -254,9 +267,9 @@ if(interactive()){
                 ),
                 boxPlus(tabBox(
                   width = 15,
-                  tabPanel(title = "Diesel", status = "primary", tableOutput("SucursalBAd")),
-                  tabPanel(title = "Super", status = "primary", tableOutput("SucursalBAs")),
-                  tabPanel(title = "VPower", status = "primary", tableOutput("SucursalBAv"))),
+                  tabPanel(title = "Diesel", status = "primary", div(tableOutput("SucursalBAd"),style="font-size:90%")),
+                  tabPanel(title = "Super", status = "primary", div(tableOutput("SucursalBAs"),style="font-size:90%")),
+                  tabPanel(title = "VPower", status = "primary", div(tableOutput("SucursalBAv"),style="font-size:90%"))),
                   title = "Sucursales con mayores ventas",
                   width = 4,
                   collapsible = TRUE,
@@ -265,9 +278,9 @@ if(interactive()){
                   footer_padding = FALSE),
                 boxPlus(tabBox(
                   width = 15,
-                  tabPanel(title = "Diesel", status = "primary", tableOutput("SucursalBBd")),
-                  tabPanel(title = "Super", status = "primary", tableOutput("SucursalBBs")),
-                  tabPanel(title = "VPower", status = "primary", tableOutput("SucursalBBv"))),
+                  tabPanel(title = "Diesel", status = "primary", div(tableOutput("SucursalBBd"),style="font-size:90%")),
+                  tabPanel(title = "Super", status = "primary", div(tableOutput("SucursalBBs"),style="font-size:90%")),
+                  tabPanel(title = "VPower", status = "primary", div(tableOutput("SucursalBBv"),style="font-size:90%"))),
                   title = "Sucursales con menores ventas",
                   width = 4,
                   collapsible = TRUE,
@@ -293,7 +306,7 @@ if(interactive()){
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = tableOutput("UtilidadC"),
+                  footer = div(tableOutput("UtilidadC"),style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosC[1], "   Anual")
                 ),
@@ -303,7 +316,7 @@ if(interactive()){
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = tableOutput("VentasC"),
+                  footer = div(tableOutput("VentasC"),style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosC[2], "   Anual")
                 ),
@@ -313,7 +326,7 @@ if(interactive()){
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = tableOutput("CostosC"),
+                  footer = div(tableOutput("CostosC"),style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosC[3], "   Anual")
                 ),
@@ -323,7 +336,7 @@ if(interactive()){
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = tableOutput("LitrosC"),
+                  footer = div(tableOutput("LitrosC"),style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosC[4], "   Anual")
                 ),
@@ -333,7 +346,7 @@ if(interactive()){
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = tableOutput("DespachoC"),
+                  footer = div(tableOutput("DespachoC"),style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosC[5], "   Anual")
                 ),
@@ -343,7 +356,7 @@ if(interactive()){
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = tableOutput("PrecioC"),
+                  footer = div(tableOutput("PrecioC"),style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosC[6], "   Anual")
                 ),
@@ -357,9 +370,9 @@ if(interactive()){
                 ),
                 boxPlus(tabBox(
                   width = 15,
-                  tabPanel(title = "Diesel", status = "primary", tableOutput("SucursalCAd")),
-                  tabPanel(title = "Super", status = "primary", tableOutput("SucursalCAs")),
-                  tabPanel(title = "VPower", status = "primary", tableOutput("SucursalCAv"))),
+                  tabPanel(title = "Diesel", status = "primary", div(tableOutput("SucursalCAd"),style="font-size:90%")),
+                  tabPanel(title = "Super", status = "primary", div(tableOutput("SucursalCAs"),style="font-size:90%")),
+                  tabPanel(title = "VPower", status = "primary", div(tableOutput("SucursalCAv"),style="font-size:90%"))),
                   title = "Sucursales con mayores ventas",
                   width = 4,
                   collapsible = TRUE,
@@ -368,9 +381,9 @@ if(interactive()){
                   footer_padding = FALSE),
                 boxPlus(tabBox(
                   width = 15,
-                  tabPanel(title = "Diesel", status = "primary", tableOutput("SucursalCBd")),
-                  tabPanel(title = "Super", status = "primary", tableOutput("SucursalCBs")),
-                  tabPanel(title = "VPower", status = "primary", tableOutput("SucursalCBv"))),
+                  tabPanel(title = "Diesel", status = "primary", div(tableOutput("SucursalCBd"),style="font-size:90%")),
+                  tabPanel(title = "Super", status = "primary", div(tableOutput("SucursalCBs"),style="font-size:90%")),
+                  tabPanel(title = "VPower", status = "primary", div(tableOutput("SucursalCBv"),style="font-size:90%"))),
                   title = "Sucursales con menores ventas",
                   width = 4,
                   collapsible = TRUE,
@@ -387,7 +400,18 @@ if(interactive()){
                         status = "primary"
                 )
               )
-      )
+      ),
+      tabItem(tabName = "PCA",
+              fluidRow(
+                boxPlus(plotlyOutput("PCA",
+                                     height = "500px"),
+                        title = "Analisis de Correspondencia Multiple",
+                        width = 12,
+                        collapsible = TRUE,
+                        closable = FALSE,
+                        status = "primary"
+                )
+              ))
     )
   )
   
@@ -401,7 +425,9 @@ if(interactive()){
     
     data <- reactive({
       
-      datos <- dplyr::filter(.data = datos, Fecha >= input$filtro[1] & Fecha <= input$filtro[2]) 
+      
+      
+      datos <- dplyr::filter(.data = datos, Fecha >= input$filtro2[1] & Fecha <= input$filtro2[2]) 
       
     })
     
@@ -412,7 +438,7 @@ if(interactive()){
       dataA <- dplyr::select(.data = data(), Región, Fecha, Producto, Margen) %>% 
         dplyr::filter(Región=="A") %>%
         dplyr::group_by(Producto) %>% 
-        dplyr::summarise(Utilidad = round(sum(Margen)/1000,0)) %>% 
+        dplyr::summarise(Utilidad = round(sum(Margen),0)) %>% 
         dplyr::ungroup() 
       
       dataA <- dplyr::add_row(.data = dataA, Producto = "Total", Utilidad = sum(dataA[2]))
@@ -430,7 +456,7 @@ if(interactive()){
       dataA <- dplyr::select(.data = data(), Región, Fecha, Producto, Pesos) %>% 
         dplyr::filter(Región=="A") %>%
         dplyr::group_by(Producto) %>% 
-        dplyr::summarise(Ventas = round(sum(Pesos)/1000,0)) %>% 
+        dplyr::summarise(Ventas = round(sum(Pesos),0)) %>% 
         dplyr::ungroup()
       
       dataA <- dplyr::add_row(.data = dataA, Producto = "Total", Ventas = sum(dataA[2]))
@@ -448,7 +474,7 @@ if(interactive()){
       dataA <- dplyr::select(.data = data(), Región, Fecha, Producto, Costo) %>% 
         dplyr::filter(Región=="A") %>%
         dplyr::group_by(Producto) %>% 
-        dplyr::summarise(Costos = round(sum(Costo)/1000,0)) %>% 
+        dplyr::summarise(Costos = round(sum(Costo),0)) %>% 
         dplyr::ungroup()
       
       dataA <- dplyr::add_row(.data = dataA, Producto = "Total", Costos = sum(dataA[2]))
@@ -466,7 +492,7 @@ if(interactive()){
       dataA <- dplyr::select(.data = data(), Región, Fecha, Producto, Litros) %>% 
         dplyr::filter(Región=="A") %>%
         dplyr::group_by(Producto) %>% 
-        dplyr::summarise(Litros = round(sum(Litros)/1000,0)) %>% 
+        dplyr::summarise(Litros = round(sum(Litros),0)) %>% 
         dplyr::ungroup()
       
       dataA <- dplyr::add_row(.data = dataA, Producto = "Total", Litros = sum(dataA[2]))
@@ -484,7 +510,7 @@ if(interactive()){
       dataA <- dplyr::select(.data = data(), Región, Fecha, Producto, Importe) %>% 
         dplyr::filter(Región=="A") %>%
         dplyr::group_by(Producto) %>% 
-        dplyr::summarise(Despachos = round(sum(Importe)/1000,0)) %>% 
+        dplyr::summarise(Despachos = round(sum(Importe),0)) %>% 
         dplyr::ungroup()
       
       dataA <- dplyr::add_row(.data = dataA, Producto = "Total", Despachos = sum(dataA[2]))
@@ -522,7 +548,7 @@ if(interactive()){
       dataB <- dplyr::select(.data = data(), Región, Fecha, Producto, Margen) %>% 
         dplyr::filter(Región=="B") %>%
         dplyr::group_by(Producto) %>% 
-        dplyr::summarise(Utilidad = round(sum(Margen)/1000,0)) %>% 
+        dplyr::summarise(Utilidad = round(sum(Margen),0)) %>% 
         dplyr::ungroup()
       
       dataB <- dplyr::add_row(.data = dataB, Producto = "Total", Utilidad = sum(dataB[2]))
@@ -540,7 +566,7 @@ if(interactive()){
       dataB <- dplyr::select(.data = data(), Región, Fecha, Producto, Pesos) %>% 
         dplyr::filter(Región=="B") %>%
         dplyr::group_by(Producto) %>% 
-        dplyr::summarise(Ventas = round(sum(Pesos)/1000,0)) %>% 
+        dplyr::summarise(Ventas = round(sum(Pesos),0)) %>% 
         dplyr::ungroup()
       
       dataB <- dplyr::add_row(.data = dataB, Producto = "Total", Ventas = sum(dataB[2]))
@@ -558,7 +584,7 @@ if(interactive()){
       dataB <- dplyr::select(.data = data(), Región, Fecha, Producto, Costo) %>% 
         dplyr::filter(Región=="B") %>%
         dplyr::group_by(Producto) %>% 
-        dplyr::summarise(Costos = round(sum(Costo)/1000,0)) %>% 
+        dplyr::summarise(Costos = round(sum(Costo),0)) %>% 
         dplyr::ungroup()
       
       dataB <- dplyr::add_row(.data = dataB, Producto = "Total", Costos = sum(dataB[2]))
@@ -576,7 +602,7 @@ if(interactive()){
       dataB <- dplyr::select(.data = data(), Región, Fecha, Producto, Litros) %>% 
         dplyr::filter(Región=="B") %>%
         dplyr::group_by(Producto) %>% 
-        dplyr::summarise(Litros = round(sum(Litros)/1000,0)) %>% 
+        dplyr::summarise(Litros = round(sum(Litros),0)) %>% 
         dplyr::ungroup()
       
       dataB <- dplyr::add_row(.data = dataB, Producto = "Total", Litros = sum(dataB[2]))
@@ -594,7 +620,7 @@ if(interactive()){
       dataB <- dplyr::select(.data = data(), Región, Fecha, Producto, Importe) %>% 
         dplyr::filter(Región=="B") %>%
         dplyr::group_by(Producto) %>% 
-        dplyr::summarise(Despachos = round(sum(Importe)/1000,0)) %>% 
+        dplyr::summarise(Despachos = round(sum(Importe),0)) %>% 
         dplyr::ungroup()
       
       dataB <- dplyr::add_row(.data = dataB, Producto = "Total", Despachos = sum(dataB[2]))
@@ -632,7 +658,7 @@ if(interactive()){
       dataC <- dplyr::select(.data = data(), Región, Fecha, Producto, Margen) %>% 
         dplyr::filter(Región=="C") %>%
         dplyr::group_by(Producto) %>% 
-        dplyr::summarise(Utilidad = round(sum(Margen)/1000,0)) %>% 
+        dplyr::summarise(Utilidad = round(sum(Margen),0)) %>% 
         dplyr::ungroup()
       
       dataC <- dplyr::add_row(.data = dataC, Producto = "Total", Utilidad = sum(dataC[2]))
@@ -650,7 +676,7 @@ if(interactive()){
       dataC <- dplyr::select(.data = data(), Región, Fecha, Producto, Pesos) %>% 
         dplyr::filter(Región=="C") %>%
         dplyr::group_by(Producto) %>% 
-        dplyr::summarise(Ventas = round(sum(Pesos)/1000,0)) %>% 
+        dplyr::summarise(Ventas = round(sum(Pesos),0)) %>% 
         dplyr::ungroup()
       
       dataC <- dplyr::add_row(.data = dataC, Producto = "Total", Ventas = sum(dataC[2]))
@@ -668,7 +694,7 @@ if(interactive()){
       dataC <- dplyr::select(.data = data(), Región, Fecha, Producto, Costo) %>% 
         dplyr::filter(Región=="C") %>%
         dplyr::group_by(Producto) %>% 
-        dplyr::summarise(Costos = round(sum(Costo)/1000,0)) %>% 
+        dplyr::summarise(Costos = round(sum(Costo),0)) %>% 
         dplyr::ungroup()
       
       dataC <- dplyr::add_row(.data = dataC, Producto = "Total", Costos = sum(dataC[2]))
@@ -686,7 +712,7 @@ if(interactive()){
       dataC <- dplyr::select(.data = data(), Región, Fecha, Producto, Litros) %>% 
         dplyr::filter(Región=="C") %>%
         dplyr::group_by(Producto) %>% 
-        dplyr::summarise(Litros = round(sum(Litros)/1000,0)) %>% 
+        dplyr::summarise(Litros = round(sum(Litros),0)) %>% 
         dplyr::ungroup()
       
       dataC <- dplyr::add_row(.data = dataC, Producto = "Total", Litros = sum(dataC[2]))
@@ -704,7 +730,7 @@ if(interactive()){
       dataC <- dplyr::select(.data = data(), Región, Fecha, Producto, Importe) %>% 
         dplyr::filter(Región=="C") %>%
         dplyr::group_by(Producto) %>% 
-        dplyr::summarise(Despachos = round(sum(Importe)/1000,0)) %>% 
+        dplyr::summarise(Despachos = round(sum(Importe),0)) %>% 
         dplyr::ungroup()
       
       dataC <- dplyr::add_row(.data = dataC, Producto = "Total", Despachos = sum(dataC[2]))
@@ -870,7 +896,7 @@ if(interactive()){
       dataA <- dplyr::select(.data = data(), Región, Estación, Fecha, Producto, Pesos) %>% 
         dplyr::filter(Región=="A") %>%
         dplyr::group_by(Producto, Estación) %>% 
-        dplyr::summarise(Ventas = round(sum(Pesos)/1000,0)) %>% 
+        dplyr::summarise(Ventas = round(sum(Pesos),0)) %>% 
         dplyr::arrange(Producto)
       
       conteo <- dplyr::select(.data = dataA, Producto) %>% 
@@ -925,7 +951,7 @@ if(interactive()){
       dataA <- dplyr::select(.data = data(), Región, Estación, Fecha, Producto, Pesos) %>% 
         dplyr::filter(Región=="B") %>%
         dplyr::group_by(Producto, Estación) %>% 
-        dplyr::summarise(Ventas = round(sum(Pesos)/1000,0)) %>% 
+        dplyr::summarise(Ventas = round(sum(Pesos),0)) %>% 
         dplyr::arrange(Producto)
       
       conteo <- dplyr::select(.data = dataA, Producto) %>% 
@@ -980,7 +1006,7 @@ if(interactive()){
       dataA <- dplyr::select(.data = data(), Región, Estación, Fecha, Producto, Pesos) %>% 
         dplyr::filter(Región=="C") %>%
         dplyr::group_by(Producto, Estación) %>% 
-        dplyr::summarise(Ventas = round(sum(Pesos)/1000,0)) %>% 
+        dplyr::summarise(Ventas = round(sum(Pesos),0)) %>% 
         dplyr::arrange(Producto)
       
       conteo <- dplyr::select(.data = dataA, Producto) %>% 
@@ -1038,8 +1064,8 @@ if(interactive()){
         dplyr::filter(Región=="A") %>%
         dplyr::filter(Producto=="Diesel") %>%
         dplyr::group_by(Estación) %>% 
-        dplyr::summarise(Ventas = round(sum(Pesos)/1000,0),
-                         Utilidad = round(sum(Margen)/1000,0),
+        dplyr::summarise(Ventas = round(sum(Pesos),0),
+                         Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
         dplyr::arrange(desc(Ventas)) %>% 
         head(3)
@@ -1058,8 +1084,8 @@ if(interactive()){
         dplyr::filter(Región=="A") %>%
         dplyr::filter(Producto=="Super") %>%
         dplyr::group_by(Estación) %>% 
-        dplyr::summarise(Ventas = round(sum(Pesos)/1000,0),
-                         Utilidad = round(sum(Margen)/1000,0),
+        dplyr::summarise(Ventas = round(sum(Pesos),0),
+                         Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
         dplyr::arrange(desc(Ventas)) %>% 
         head(3)
@@ -1078,8 +1104,8 @@ if(interactive()){
         dplyr::filter(Región=="A") %>%
         dplyr::filter(Producto=="VPower") %>%
         dplyr::group_by(Estación) %>% 
-        dplyr::summarise(Ventas = round(sum(Pesos)/1000,0),
-                         Utilidad = round(sum(Margen)/1000,0),
+        dplyr::summarise(Ventas = round(sum(Pesos),0),
+                         Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
         dplyr::arrange(desc(Ventas)) %>% 
         head(3)
@@ -1098,8 +1124,8 @@ if(interactive()){
         dplyr::filter(Región=="A") %>%
         dplyr::filter(Producto=="Diesel") %>%
         dplyr::group_by(Estación) %>% 
-        dplyr::summarise(Ventas = round(sum(Pesos)/1000,0),
-                         Utilidad = round(sum(Margen)/1000,0),
+        dplyr::summarise(Ventas = round(sum(Pesos),0),
+                         Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
         dplyr::arrange(Ventas) %>% 
         head(3)
@@ -1118,8 +1144,8 @@ if(interactive()){
         dplyr::filter(Región=="A") %>%
         dplyr::filter(Producto=="Super") %>%
         dplyr::group_by(Estación) %>% 
-        dplyr::summarise(Ventas = round(sum(Pesos)/1000,0),
-                         Utilidad = round(sum(Margen)/1000,0),
+        dplyr::summarise(Ventas = round(sum(Pesos),0),
+                         Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
         dplyr::arrange(Ventas) %>% 
         head(3)
@@ -1138,8 +1164,8 @@ if(interactive()){
         dplyr::filter(Región=="A") %>%
         dplyr::filter(Producto=="VPower") %>%
         dplyr::group_by(Estación) %>% 
-        dplyr::summarise(Ventas = round(sum(Pesos)/1000,0),
-                         Utilidad = round(sum(Margen)/1000,0),
+        dplyr::summarise(Ventas = round(sum(Pesos),0),
+                         Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
         dplyr::arrange(Ventas) %>% 
         head(3)
@@ -1160,8 +1186,8 @@ if(interactive()){
         dplyr::filter(Región=="B") %>%
         dplyr::filter(Producto=="Diesel") %>%
         dplyr::group_by(Estación) %>% 
-        dplyr::summarise(Ventas = round(sum(Pesos)/1000,0),
-                         Utilidad = round(sum(Margen)/1000,0),
+        dplyr::summarise(Ventas = round(sum(Pesos),0),
+                         Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
         dplyr::arrange(desc(Ventas)) %>% 
         head(3)
@@ -1180,8 +1206,8 @@ if(interactive()){
         dplyr::filter(Región=="B") %>%
         dplyr::filter(Producto=="Super") %>%
         dplyr::group_by(Estación) %>% 
-        dplyr::summarise(Ventas = round(sum(Pesos)/1000,0),
-                         Utilidad = round(sum(Margen)/1000,0),
+        dplyr::summarise(Ventas = round(sum(Pesos),0),
+                         Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
         dplyr::arrange(desc(Ventas)) %>% 
         head(3)
@@ -1200,8 +1226,8 @@ if(interactive()){
         dplyr::filter(Región=="B") %>%
         dplyr::filter(Producto=="VPower") %>%
         dplyr::group_by(Estación) %>% 
-        dplyr::summarise(Ventas = round(sum(Pesos)/1000,0),
-                         Utilidad = round(sum(Margen)/1000,0),
+        dplyr::summarise(Ventas = round(sum(Pesos),0),
+                         Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
         dplyr::arrange(desc(Ventas)) %>% 
         head(3)
@@ -1220,8 +1246,8 @@ if(interactive()){
         dplyr::filter(Región=="B") %>%
         dplyr::filter(Producto=="Diesel") %>%
         dplyr::group_by(Estación) %>% 
-        dplyr::summarise(Ventas = round(sum(Pesos)/1000,0),
-                         Utilidad = round(sum(Margen)/1000,0),
+        dplyr::summarise(Ventas = round(sum(Pesos),0),
+                         Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
         dplyr::arrange(Ventas) %>% 
         head(3)
@@ -1240,8 +1266,8 @@ if(interactive()){
         dplyr::filter(Región=="B") %>%
         dplyr::filter(Producto=="Super") %>%
         dplyr::group_by(Estación) %>% 
-        dplyr::summarise(Ventas = round(sum(Pesos)/1000,0),
-                         Utilidad = round(sum(Margen)/1000,0),
+        dplyr::summarise(Ventas = round(sum(Pesos),0),
+                         Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
         dplyr::arrange(Ventas) %>% 
         head(3)
@@ -1260,8 +1286,8 @@ if(interactive()){
         dplyr::filter(Región=="B") %>%
         dplyr::filter(Producto=="VPower") %>%
         dplyr::group_by(Estación) %>% 
-        dplyr::summarise(Ventas = round(sum(Pesos)/1000,0),
-                         Utilidad = round(sum(Margen)/1000,0),
+        dplyr::summarise(Ventas = round(sum(Pesos),0),
+                         Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
         dplyr::arrange(Ventas) %>% 
         head(3)
@@ -1282,8 +1308,8 @@ if(interactive()){
         dplyr::filter(Región=="C") %>%
         dplyr::filter(Producto=="Diesel") %>%
         dplyr::group_by(Estación) %>% 
-        dplyr::summarise(Ventas = round(sum(Pesos)/1000,0),
-                         Utilidad = round(sum(Margen)/1000,0),
+        dplyr::summarise(Ventas = round(sum(Pesos),0),
+                         Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
         dplyr::arrange(desc(Ventas)) %>% 
         head(3)
@@ -1302,8 +1328,8 @@ if(interactive()){
         dplyr::filter(Región=="C") %>%
         dplyr::filter(Producto=="Super") %>%
         dplyr::group_by(Estación) %>% 
-        dplyr::summarise(Ventas = round(sum(Pesos)/1000,0),
-                         Utilidad = round(sum(Margen)/1000,0),
+        dplyr::summarise(Ventas = round(sum(Pesos),0),
+                         Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
         dplyr::arrange(desc(Ventas)) %>% 
         head(3)
@@ -1322,8 +1348,8 @@ if(interactive()){
         dplyr::filter(Región=="C") %>%
         dplyr::filter(Producto=="VPower") %>%
         dplyr::group_by(Estación) %>% 
-        dplyr::summarise(Ventas = round(sum(Pesos)/1000,0),
-                         Utilidad = round(sum(Margen)/1000,0),
+        dplyr::summarise(Ventas = round(sum(Pesos),0),
+                         Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
         dplyr::arrange(desc(Ventas)) %>% 
         head(3)
@@ -1342,8 +1368,8 @@ if(interactive()){
         dplyr::filter(Región=="C") %>%
         dplyr::filter(Producto=="Diesel") %>%
         dplyr::group_by(Estación) %>% 
-        dplyr::summarise(Ventas = round(sum(Pesos)/1000,0),
-                         Utilidad = round(sum(Margen)/1000,0),
+        dplyr::summarise(Ventas = round(sum(Pesos),0),
+                         Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
         dplyr::arrange(Ventas) %>% 
         head(3)
@@ -1362,8 +1388,8 @@ if(interactive()){
         dplyr::filter(Región=="C") %>%
         dplyr::filter(Producto=="Super") %>%
         dplyr::group_by(Estación) %>% 
-        dplyr::summarise(Ventas = round(sum(Pesos)/1000,0),
-                         Utilidad = round(sum(Margen)/1000,0),
+        dplyr::summarise(Ventas = round(sum(Pesos),0),
+                         Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
         dplyr::arrange(Ventas) %>% 
         head(3)
@@ -1382,8 +1408,8 @@ if(interactive()){
         dplyr::filter(Región=="C") %>%
         dplyr::filter(Producto=="VPower") %>%
         dplyr::group_by(Estación) %>% 
-        dplyr::summarise(Ventas = round(sum(Pesos)/1000,0),
-                         Utilidad = round(sum(Margen)/1000,0),
+        dplyr::summarise(Ventas = round(sum(Pesos),0),
+                         Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
         dplyr::arrange(Ventas) %>% 
         head(3)
@@ -1395,6 +1421,62 @@ if(interactive()){
       SucursalCBv <-  dataA[c(1,2,4)]
       
     })
+    
+    #Grafica ACP
+    
+    PCA <- reactive({
+      
+      dataA <- dplyr::select(.data = data(), Región, Fecha, Producto, Estación, Pesos) %>% 
+        dplyr::group_by(Estación, Región, Producto) %>% 
+        dplyr::summarise(Pesos = sum(Pesos))
+      
+      dataA <- tidyr::spread(data = dataA, Producto, Pesos, fill=0)
+      
+      dataA <- data.frame(dataA)
+      
+      rownames(dataA) <- dataA$Estación
+      
+      dataA <- data.frame(dataA)
+      
+      PCA <- FactoMineR::PCA(dataA, graph= FALSE, quali.sup = 1:2)
+      
+      dataA[3:5] <- format(dataA[3:5], big.mark = ",")
+      
+      dataA <- data.frame(dataA)
+      
+      grafica <- ggbiplot::ggbiplot(pcobj = PCA) +
+        geom_point(size = 3 ,
+                   aes(color = dataA$Región,
+                       text = paste("Sucursal:" , dataA$Estación,
+                                    '</br> Diesel:' ,dataA$Diesel,
+                                    '</br> Super:', dataA$Super,
+                                    '</br> VPower:', dataA$VPower)))+
+        guides(color = guide_legend(title = "Región"))+
+        ggthemes::theme_fivethirtyeight(base_size = 15) +
+        ggplot2::xlab("")+
+        ggplot2::labs(title = "Analisis de Componentes Principales", subtitle = "Biplot")+
+        ggplot2::ylab("") +
+        ggplot2::scale_colour_manual(values =  c("#e33575", "#075383", "#b4b4b4"))+
+        ggplot2::theme(panel.grid.major = ggplot2::element_line(colour = "black"),
+                       panel.grid.minor = ggplot2::element_blank(), 
+                       panel.border = ggplot2::element_blank(),
+                       plot.background = ggplot2::element_rect(fill = "#272c30", colour = "#272c30"), 
+                       panel.background = ggplot2::element_rect(fill = "#272c30", colour = "#272c30"), 
+                       plot.title = ggplot2::element_text(colour = 'white'),
+                       plot.subtitle = ggplot2::element_text(colour = 'white'),
+                       plot.caption = ggplot2::element_text(color = "white"),
+                       axis.text = ggplot2::element_text(colour = "white"),
+                       axis.title.y.left = ggplot2::element_text(colour = "white"),
+                       axis.title.x.bottom = ggplot2::element_text(colour = "white"),
+                       legend.position =  "bottom",
+                       legend.text = element_text(colour = "white"),
+                       legend.title = element_text(colour="white"),
+                       legend.background = element_rect(fill="#272c30"),
+                       axis.title.y  = ggplot2::element_text(angle = 90, colour = "white"))
+      
+      grafica <- ggplotly(grafica)
+    })
+    
     
   
     output$UtilidadA <- renderTable(dataUtilidadA(), colnames = FALSE, align = "l",spacing = "xs", digits = 0)  
@@ -1439,8 +1521,10 @@ if(interactive()){
     output$SucursalCBd <- renderTable(dataSucursalCBd(), colnames = TRUE, align = "l",spacing = "xs", digits = 0)
     output$SucursalCBs <- renderTable(dataSucursalCBs(), colnames = TRUE, align = "l",spacing = "xs", digits = 0)
     output$SucursalCBv <- renderTable(dataSucursalCBv(), colnames = TRUE, align = "l",spacing = "xs", digits = 0)
+    output$PCA <- renderPlotly(PCA())
   }
   
   shinyApp(ui = ui, server = server)
   
 }
+
