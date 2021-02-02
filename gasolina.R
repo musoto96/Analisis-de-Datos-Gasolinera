@@ -9,6 +9,7 @@ library(FactoMineR)
 library(factoextra)
 library(tidyr)
 library(ggbiplot)
+library(forecast)
 
 
 
@@ -18,8 +19,7 @@ datos <- data.frame(readxl::read_excel("C:/Users/0303u/Google Drive/Trabajo/Trab
 
 datos$Fecha <- as.Date(datos$Fecha)
 
-if(interactive()){
-  
+
   header <- dashboardHeaderPlus(title = "Shell")
   
   sidebar <- dashboardSidebar({
@@ -27,8 +27,7 @@ if(interactive()){
       menuItem("Principal", tabName = "Principal", icon = icon("chart-line"),
                menuSubItem("Región A", tabName = "RegiónA", icon = shiny::icon("stream")),
                menuSubItem("Región B", tabName = "RegiónB", icon = shiny::icon("stream")),
-               menuSubItem("Región C", tabName = "RegiónC", icon = shiny::icon("stream"))
-      ),
+               menuSubItem("Región C", tabName = "RegiónC", icon = shiny::icon("stream"))),
       menuItem("Avanzado", tabName = "Avanzado", icon = icon("laptop-code"),
                menuSubItem("PCA", tabName = "PCA", icon = shiny::icon("stream")),
                menuSubItem("Pronostico", tabName = "Pronostico", icon = shiny::icon("stream")),
@@ -41,16 +40,8 @@ if(interactive()){
                      end = "2020-12-31",
                      language = "es",
                      separator = "A",
-                     format = "dd-mm-yyyy"
-                     
-      ),
-      sliderInput(inputId = "filtro2",
-                  label = "Periodo",
-                  min = as.Date(min(datos$Fecha)),
-                  max = Sys.Date(),
-                  value = as.Date(c("2020-01-01","2020-12-31")),
-                  animate = TRUE
-      )
+                     format = "dd-mm-yyyy"),
+      uiOutput("filtro2")
     )})
   
     datosFijos <- dplyr::filter(.data = datos, Fecha >= "2020-01-01" & Fecha <= "2020-12-31")
@@ -164,9 +155,9 @@ if(interactive()){
                 ),
                 boxPlus(tabBox(
                   width = 15,
-                  tabPanel(title = "Diesel", status = "primary", div(tableOutput("SucursalAAd"),style="font-size:90%")),
                   tabPanel(title = "Super", status = "primary", div(tableOutput("SucursalAAs"),style="font-size:90%")),
-                  tabPanel(title = "VPower", status = "primary", div(tableOutput("SucursalAAv"),style="font-size:90%"))),
+                  tabPanel(title = "VPower", status = "primary", div(tableOutput("SucursalAAv"),style="font-size:90%")),
+                  tabPanel(title = "Diesel", status = "primary", div(tableOutput("SucursalAAd"),style="font-size:90%"))),
                   title = "Sucursales con mayores ventas",
                   width = 4,
                   collapsible = TRUE,
@@ -175,9 +166,9 @@ if(interactive()){
                   footer_padding = FALSE),
                 boxPlus(tabBox(
                   width = 15,
-                  tabPanel(title = "Diesel", status = "primary", div(tableOutput("SucursalABd"),style="font-size:90%")),
                   tabPanel(title = "Super", status = "primary", div(tableOutput("SucursalABs"),style="font-size:90%")),
-                  tabPanel(title = "VPower", status = "primary", div(tableOutput("SucursalABv"),style="font-size:90%"))),
+                  tabPanel(title = "VPower", status = "primary", div(tableOutput("SucursalABv"),style="font-size:90%")),
+                  tabPanel(title = "Diesel", status = "primary", div(tableOutput("SucursalABd"),style="font-size:90%"))),
                   title = "Sucursales con menores ventas",
                   width = 4,
                   collapsible = TRUE,
@@ -267,9 +258,9 @@ if(interactive()){
                 ),
                 boxPlus(tabBox(
                   width = 15,
-                  tabPanel(title = "Diesel", status = "primary", div(tableOutput("SucursalBAd"),style="font-size:90%")),
                   tabPanel(title = "Super", status = "primary", div(tableOutput("SucursalBAs"),style="font-size:90%")),
-                  tabPanel(title = "VPower", status = "primary", div(tableOutput("SucursalBAv"),style="font-size:90%"))),
+                  tabPanel(title = "VPower", status = "primary", div(tableOutput("SucursalBAv"),style="font-size:90%")),
+                  tabPanel(title = "Diesel", status = "primary", div(tableOutput("SucursalBAd"),style="font-size:90%"))),
                   title = "Sucursales con mayores ventas",
                   width = 4,
                   collapsible = TRUE,
@@ -278,9 +269,9 @@ if(interactive()){
                   footer_padding = FALSE),
                 boxPlus(tabBox(
                   width = 15,
-                  tabPanel(title = "Diesel", status = "primary", div(tableOutput("SucursalBBd"),style="font-size:90%")),
                   tabPanel(title = "Super", status = "primary", div(tableOutput("SucursalBBs"),style="font-size:90%")),
-                  tabPanel(title = "VPower", status = "primary", div(tableOutput("SucursalBBv"),style="font-size:90%"))),
+                  tabPanel(title = "VPower", status = "primary", div(tableOutput("SucursalBBv"),style="font-size:90%")),
+                  tabPanel(title = "Diesel", status = "primary", div(tableOutput("SucursalBBd"),style="font-size:90%"))),
                   title = "Sucursales con menores ventas",
                   width = 4,
                   collapsible = TRUE,
@@ -370,9 +361,9 @@ if(interactive()){
                 ),
                 boxPlus(tabBox(
                   width = 15,
-                  tabPanel(title = "Diesel", status = "primary", div(tableOutput("SucursalCAd"),style="font-size:90%")),
                   tabPanel(title = "Super", status = "primary", div(tableOutput("SucursalCAs"),style="font-size:90%")),
-                  tabPanel(title = "VPower", status = "primary", div(tableOutput("SucursalCAv"),style="font-size:90%"))),
+                  tabPanel(title = "VPower", status = "primary", div(tableOutput("SucursalCAv"),style="font-size:90%")),
+                  tabPanel(title = "Diesel", status = "primary", div(tableOutput("SucursalCAd"),style="font-size:90%"))),
                   title = "Sucursales con mayores ventas",
                   width = 4,
                   collapsible = TRUE,
@@ -381,9 +372,9 @@ if(interactive()){
                   footer_padding = FALSE),
                 boxPlus(tabBox(
                   width = 15,
-                  tabPanel(title = "Diesel", status = "primary", div(tableOutput("SucursalCBd"),style="font-size:90%")),
                   tabPanel(title = "Super", status = "primary", div(tableOutput("SucursalCBs"),style="font-size:90%")),
-                  tabPanel(title = "VPower", status = "primary", div(tableOutput("SucursalCBv"),style="font-size:90%"))),
+                  tabPanel(title = "VPower", status = "primary", div(tableOutput("SucursalCBv"),style="font-size:90%")),
+                  tabPanel(title = "Diesel", status = "primary", div(tableOutput("SucursalCBd"),style="font-size:90%"))),
                   title = "Sucursales con menores ventas",
                   width = 4,
                   collapsible = TRUE,
@@ -411,6 +402,70 @@ if(interactive()){
                         closable = FALSE,
                         status = "primary"
                 )
+                      )
+              ),
+      tabItem(tabName = "Pronostico",
+              fluidRow(
+                boxPlus(
+                  title = "Región",
+                  width = 2,
+                  collapsible = TRUE,
+                  closable = FALSE,
+                  status = "primary",
+                  footer_padding = FALSE,
+                  tags$style("#select2 {background-color:blue;}"),
+                  selectInput(inputId = "Región",
+                              label = "",
+                              choices = c("A","B","C","Total"))),
+                  boxPlus(
+                    title = "Sucursal",
+                    width = 4,
+                    collapsible = TRUE,
+                    closable = FALSE,
+                    status = "primary",
+                    footer_padding = FALSE,
+                    uiOutput("Estación")),
+                  boxPlus(
+                    title = "Producto",
+                    width = 2,
+                    collapsible = TRUE,
+                    closable = FALSE,
+                    status = "primary",
+                    footer_padding = FALSE,
+                    uiOutput("Producto")),
+                  boxPlus(
+                    title = "# de Pronosticos",
+                    width = 2,
+                    collapsible = TRUE,
+                    closable = FALSE,
+                    status = "primary",
+                    footer_padding = FALSE,
+                    numericInput("pronosticos","", 7, min = 1, max = 31)),
+                boxPlus(
+                  title = "Descarga Datos",
+                  width = 2,
+                  collapsible = TRUE,
+                  closable = FALSE,
+                  status = "primary",
+                  footer_padding = FALSE,
+                  downloadButton("Descarga", label = "Descarga")),
+                boxPlus(
+                  plotlyOutput("Arima",
+                               height = "350px"),
+                  title = "Pronostico",
+                  width = 9,
+                  collapsible = TRUE,
+                  closable = FALSE,
+                  status = "maroon",
+                  footer_padding = FALSE),
+                boxPlus(
+                  tableOutput("tablaPronostico"),
+                  title = "Datos",
+                  width = 3,
+                  collapsible = TRUE,
+                  closable = FALSE,
+                  status = "maroon",
+                  footer_padding = FALSE)
               ))
     )
   )
@@ -422,6 +477,16 @@ if(interactive()){
   
   
   server <- function(input, output) {
+    
+    #Segundo filtro dinamico
+    
+    output$filtro2 <- renderUI(sliderInput(inputId = "filtro2",
+                                           label = "Periodo",
+                                           format = "dd-mm-yyyy",
+                                           animate = TRUE,
+                                           min = input$filtro[1],
+                                           max = input$filtro[2],
+                                           value = as.Date(c(input$filtro[1],input$filtro[1]+7))))
     
     data <- reactive({
       
@@ -441,7 +506,7 @@ if(interactive()){
         dplyr::summarise(Utilidad = round(sum(Margen),0)) %>% 
         dplyr::ungroup() 
       
-      dataA <- dplyr::add_row(.data = dataA, Producto = "Total", Utilidad = sum(dataA[2]))
+      dataA <- dplyr::add_row(.data = dataA, Producto = "TOTAL", Utilidad = sum(dataA[2]))
       
       dataA <- data.frame(dataA)
       
@@ -459,7 +524,7 @@ if(interactive()){
         dplyr::summarise(Ventas = round(sum(Pesos),0)) %>% 
         dplyr::ungroup()
       
-      dataA <- dplyr::add_row(.data = dataA, Producto = "Total", Ventas = sum(dataA[2]))
+      dataA <- dplyr::add_row(.data = dataA, Producto = "TOTAL", Ventas = sum(dataA[2]))
       
       dataA <- data.frame(dataA)
       
@@ -477,7 +542,7 @@ if(interactive()){
         dplyr::summarise(Costos = round(sum(Costo),0)) %>% 
         dplyr::ungroup()
       
-      dataA <- dplyr::add_row(.data = dataA, Producto = "Total", Costos = sum(dataA[2]))
+      dataA <- dplyr::add_row(.data = dataA, Producto = "TOTAL", Costos = sum(dataA[2]))
       
       dataA <- data.frame(dataA)
       
@@ -495,7 +560,7 @@ if(interactive()){
         dplyr::summarise(Litros = round(sum(Litros),0)) %>% 
         dplyr::ungroup()
       
-      dataA <- dplyr::add_row(.data = dataA, Producto = "Total", Litros = sum(dataA[2]))
+      dataA <- dplyr::add_row(.data = dataA, Producto = "TOTAL", Litros = sum(dataA[2]))
       
       dataA <- data.frame(dataA)
       
@@ -513,7 +578,7 @@ if(interactive()){
         dplyr::summarise(Despachos = round(sum(Importe),0)) %>% 
         dplyr::ungroup()
       
-      dataA <- dplyr::add_row(.data = dataA, Producto = "Total", Despachos = sum(dataA[2]))
+      dataA <- dplyr::add_row(.data = dataA, Producto = "TOTAL", Despachos = sum(dataA[2]))
       
       dataA <- data.frame(dataA)
       
@@ -531,7 +596,7 @@ if(interactive()){
         dplyr::summarise(PrecioLitro = round(mean(PrecioLitro),2)) %>% 
         dplyr::ungroup()
       
-      dataA <- dplyr::add_row(.data = dataA, Producto = "Promedio", PrecioLitro = round(mean(dataA$PrecioLitro),2))
+      dataA <- dplyr::add_row(.data = dataA, Producto = "PROMEDIO", PrecioLitro = round(mean(dataA$PrecioLitro),2))
       
       dataA <- data.frame(dataA)
       
@@ -551,7 +616,7 @@ if(interactive()){
         dplyr::summarise(Utilidad = round(sum(Margen),0)) %>% 
         dplyr::ungroup()
       
-      dataB <- dplyr::add_row(.data = dataB, Producto = "Total", Utilidad = sum(dataB[2]))
+      dataB <- dplyr::add_row(.data = dataB, Producto = "TOTAL", Utilidad = sum(dataB[2]))
       
       dataB <- data.frame(dataB)
       
@@ -569,7 +634,7 @@ if(interactive()){
         dplyr::summarise(Ventas = round(sum(Pesos),0)) %>% 
         dplyr::ungroup()
       
-      dataB <- dplyr::add_row(.data = dataB, Producto = "Total", Ventas = sum(dataB[2]))
+      dataB <- dplyr::add_row(.data = dataB, Producto = "TOTAL", Ventas = sum(dataB[2]))
       
       dataB <- data.frame(dataB)
       
@@ -587,7 +652,7 @@ if(interactive()){
         dplyr::summarise(Costos = round(sum(Costo),0)) %>% 
         dplyr::ungroup()
       
-      dataB <- dplyr::add_row(.data = dataB, Producto = "Total", Costos = sum(dataB[2]))
+      dataB <- dplyr::add_row(.data = dataB, Producto = "TOTAL", Costos = sum(dataB[2]))
       
       dataB <- data.frame(dataB)
       
@@ -605,7 +670,7 @@ if(interactive()){
         dplyr::summarise(Litros = round(sum(Litros),0)) %>% 
         dplyr::ungroup()
       
-      dataB <- dplyr::add_row(.data = dataB, Producto = "Total", Litros = sum(dataB[2]))
+      dataB <- dplyr::add_row(.data = dataB, Producto = "TOTAL", Litros = sum(dataB[2]))
       
       dataB <- data.frame(dataB)
       
@@ -623,7 +688,7 @@ if(interactive()){
         dplyr::summarise(Despachos = round(sum(Importe),0)) %>% 
         dplyr::ungroup()
       
-      dataB <- dplyr::add_row(.data = dataB, Producto = "Total", Despachos = sum(dataB[2]))
+      dataB <- dplyr::add_row(.data = dataB, Producto = "TOTAL", Despachos = sum(dataB[2]))
       
       dataB <- data.frame(dataB)
       
@@ -641,7 +706,7 @@ if(interactive()){
         dplyr::summarise(PrecioLitro = round(mean(PrecioLitro),2)) %>% 
         dplyr::ungroup()
       
-      dataB <- dplyr::add_row(.data = dataB, Producto = "Promedio", PrecioLitro = mean((dataB$PrecioLitro),2))
+      dataB <- dplyr::add_row(.data = dataB, Producto = "PROMEDIO", PrecioLitro = mean((dataB$PrecioLitro),2))
       
       dataB <- data.frame(dataB)
       
@@ -661,7 +726,7 @@ if(interactive()){
         dplyr::summarise(Utilidad = round(sum(Margen),0)) %>% 
         dplyr::ungroup()
       
-      dataC <- dplyr::add_row(.data = dataC, Producto = "Total", Utilidad = sum(dataC[2]))
+      dataC <- dplyr::add_row(.data = dataC, Producto = "TOTAL", Utilidad = sum(dataC[2]))
       
       dataC <- data.frame(dataC)
       
@@ -679,7 +744,7 @@ if(interactive()){
         dplyr::summarise(Ventas = round(sum(Pesos),0)) %>% 
         dplyr::ungroup()
       
-      dataC <- dplyr::add_row(.data = dataC, Producto = "Total", Ventas = sum(dataC[2]))
+      dataC <- dplyr::add_row(.data = dataC, Producto = "TOTAL", Ventas = sum(dataC[2]))
       
       dataC <- data.frame(dataC)
       
@@ -697,7 +762,7 @@ if(interactive()){
         dplyr::summarise(Costos = round(sum(Costo),0)) %>% 
         dplyr::ungroup()
       
-      dataC <- dplyr::add_row(.data = dataC, Producto = "Total", Costos = sum(dataC[2]))
+      dataC <- dplyr::add_row(.data = dataC, Producto = "TOTAL", Costos = sum(dataC[2]))
       
       dataC <- data.frame(dataC)
       
@@ -715,7 +780,7 @@ if(interactive()){
         dplyr::summarise(Litros = round(sum(Litros),0)) %>% 
         dplyr::ungroup()
       
-      dataC <- dplyr::add_row(.data = dataC, Producto = "Total", Litros = sum(dataC[2]))
+      dataC <- dplyr::add_row(.data = dataC, Producto = "TOTAL", Litros = sum(dataC[2]))
       
       dataC <- data.frame(dataC)
       
@@ -733,7 +798,7 @@ if(interactive()){
         dplyr::summarise(Despachos = round(sum(Importe),0)) %>% 
         dplyr::ungroup()
       
-      dataC <- dplyr::add_row(.data = dataC, Producto = "Total", Despachos = sum(dataC[2]))
+      dataC <- dplyr::add_row(.data = dataC, Producto = "TOTAL", Despachos = sum(dataC[2]))
       
       dataC <- data.frame(dataC)
       
@@ -751,7 +816,7 @@ if(interactive()){
         dplyr::summarise(PrecioLitro = round(mean(PrecioLitro),2)) %>% 
         dplyr::ungroup()
       
-      dataC <- dplyr::add_row(.data = dataC, Producto = "Promedio", PrecioLitro = mean((dataC$PrecioLitro),2))
+      dataC <- dplyr::add_row(.data = dataC, Producto = "PROMEDIO", PrecioLitro = mean((dataC$PrecioLitro),2))
       
       dataC <- data.frame(dataC)
       
@@ -770,38 +835,12 @@ if(interactive()){
         dplyr::group_by(Producto, Fecha) %>% 
         dplyr::summarise(Utilidad = sum(Margen))
       
-      grafica <- ggplot2::ggplot(data = datosGrafica, ggplot2::aes(x=Fecha, y=Utilidad, colour=Producto)) +
-        ggplot2::geom_line() +
-        ggthemes::theme_fivethirtyeight(base_size = 8) +
-        ggplot2::xlab("")+
-        ggplot2::labs()+
-        ggplot2::ylab("Utilidad") +
-        ggplot2::scale_x_date(date_breaks = "1 months",
-                              date_labels = "%b %y")+
-        ggplot2::scale_colour_manual(values =  c("#e33575", "#075383", "#b4b4b4"))+
-        ggplot2::theme(panel.grid.major = ggplot2::element_blank(),
-                       panel.grid.minor = ggplot2::element_blank(), 
-                       panel.border = ggplot2::element_blank(),
-                       plot.background = ggplot2::element_rect(fill = "#272c30", colour = "#272c30"), 
-                       panel.background = ggplot2::element_rect(fill = "#272c30", colour = "#272c30"), 
-                       plot.title = ggplot2::element_text(colour = 'white'),
-                       plot.subtitle = ggplot2::element_text(colour = 'white'),
-                       plot.caption = ggplot2::element_text(color = "white"),
-                       axis.text = ggplot2::element_text(colour = "white"),
-                       axis.title.y.left = ggplot2::element_text(colour = "white"),
-                       axis.title.x.bottom = ggplot2::element_text(colour = "white"),
-                       legend.position =  "bottom",
-                       legend.text = element_text(colour = "white"),
-                       legend.title = element_text(colour="white"),
-                       legend.background = element_rect(fill="#272c30"),
-                       axis.title.y  = ggplot2::element_text(angle = 90, colour = "white"),
-                       axis.title.x = ggplot2::element_blank(),
-                       axis.ticks.x = ggplot2::element_blank(),
-                       axis.text.x = ggplot2::element_text(colour = "white", angle = 15))
       
-      grafica <- ggplotly(grafica)
+      plot_ly(data=datosGrafica, x=~Fecha,  y = ~Utilidad,
+              type = 'scatter', mode = 'lines',
+              color = ~Producto , colors = c("#e33575", "#075383", "#b4b4b4")) %>%
+        layout( plot_bgcolor = "#272c30", paper_bgcolor = "#272c30")  
       
-      grafica
       
     })
     
@@ -812,38 +851,12 @@ if(interactive()){
         dplyr::group_by(Producto, Fecha) %>% 
         dplyr::summarise(Utilidad = sum(Margen))
       
-      grafica <- ggplot2::ggplot(data = datosGrafica, ggplot2::aes(x=Fecha, y=Utilidad, colour=Producto)) +
-        ggplot2::geom_line() +
-        ggthemes::theme_fivethirtyeight(base_size = 8) +
-        ggplot2::xlab("")+
-        ggplot2::labs()+
-        ggplot2::ylab("Utilidad") +
-        ggplot2::scale_x_date(date_breaks = "1 months",
-                              date_labels = "%b %y")+
-        ggplot2::scale_colour_manual(values =  c("#e33575", "#075383", "#b4b4b4"))+
-        ggplot2::theme(panel.grid.major = ggplot2::element_blank(),
-                       panel.grid.minor = ggplot2::element_blank(), 
-                       panel.border = ggplot2::element_blank(),
-                       plot.background = ggplot2::element_rect(fill = "#272c30", colour = "#272c30"), 
-                       panel.background = ggplot2::element_rect(fill = "#272c30", colour = "#272c30"), 
-                       plot.title = ggplot2::element_text(colour = 'white'),
-                       plot.subtitle = ggplot2::element_text(colour = 'white'),
-                       plot.caption = ggplot2::element_text(color = "white"),
-                       axis.text = ggplot2::element_text(colour = "white"),
-                       axis.title.y.left = ggplot2::element_text(colour = "white"),
-                       axis.title.x.bottom = ggplot2::element_text(colour = "white"),
-                       legend.position =  "bottom",
-                       legend.text = element_text(colour = "white"),
-                       legend.title = element_text(colour="white"),
-                       legend.background = element_rect(fill="#272c30"),
-                       axis.title.y  = ggplot2::element_text(angle = 90, colour = "white"),
-                       axis.title.x = ggplot2::element_blank(),
-                       axis.ticks.x = ggplot2::element_blank(),
-                       axis.text.x = ggplot2::element_text(colour = "white", angle = 15))
       
-      grafica <- ggplotly(grafica)
+      plot_ly(data=datosGrafica, x=~Fecha,  y = ~Utilidad,
+              type = 'scatter', mode = 'lines',
+              color = ~Producto , colors = c("#e33575", "#075383", "#b4b4b4")) %>%
+        layout( plot_bgcolor = "#272c30", paper_bgcolor = "#272c30")  
       
-      grafica
       
     })
     
@@ -854,38 +867,12 @@ if(interactive()){
         dplyr::group_by(Producto, Fecha) %>% 
         dplyr::summarise(Utilidad = sum(Margen))
       
-      grafica <- ggplot2::ggplot(data = datosGrafica, ggplot2::aes(x=Fecha, y=Utilidad, colour=Producto)) +
-        ggplot2::geom_line() +
-        ggthemes::theme_fivethirtyeight(base_size = 8) +
-        ggplot2::xlab("")+
-        ggplot2::labs()+
-        ggplot2::ylab("Utilidad") +
-        ggplot2::scale_x_date(date_breaks = "1 months",
-                              date_labels = "%b %y")+
-        ggplot2::scale_colour_manual(values =  c("#e33575", "#075383", "#b4b4b4"))+
-        ggplot2::theme(panel.grid.major = ggplot2::element_blank(),
-                       panel.grid.minor = ggplot2::element_blank(), 
-                       panel.border = ggplot2::element_blank(),
-                       plot.background = ggplot2::element_rect(fill = "#272c30", colour = "#272c30"), 
-                       panel.background = ggplot2::element_rect(fill = "#272c30", colour = "#272c30"), 
-                       plot.title = ggplot2::element_text(colour = 'white'),
-                       plot.subtitle = ggplot2::element_text(colour = 'white'),
-                       plot.caption = ggplot2::element_text(color = "white"),
-                       axis.text = ggplot2::element_text(colour = "white"),
-                       axis.title.y.left = ggplot2::element_text(colour = "white"),
-                       axis.title.x.bottom = ggplot2::element_text(colour = "white"),
-                       legend.position =  "bottom",
-                       legend.text = element_text(colour = "white"),
-                       legend.title = element_text(colour="white"),
-                       legend.background = element_rect(fill="#272c30"),
-                       axis.title.y  = ggplot2::element_text(angle = 90, colour = "white"),
-                       axis.title.x = ggplot2::element_blank(),
-                       axis.ticks.x = ggplot2::element_blank(),
-                       axis.text.x = ggplot2::element_text(colour = "white", angle = 15))
       
-      grafica <- ggplotly(grafica)
+      plot_ly(data=datosGrafica, x=~Fecha,  y = ~Utilidad,
+              type = 'scatter', mode = 'lines',
+              color = ~Producto , colors = c("#e33575", "#075383", "#b4b4b4")) %>%
+        layout( plot_bgcolor = "#272c30", paper_bgcolor = "#272c30")  
       
-      grafica
       
     })
     
@@ -893,18 +880,20 @@ if(interactive()){
     
     grafica4 <- reactive({
       
-      dataA <- dplyr::select(.data = data(), Región, Estación, Fecha, Producto, Pesos) %>% 
+      dataA <- dplyr::select(.data = data(), Región, Estación, Fecha, Producto, Pesos, Margen) %>% 
         dplyr::filter(Región=="A") %>%
         dplyr::group_by(Producto, Estación) %>% 
-        dplyr::summarise(Ventas = round(sum(Pesos),0)) %>% 
+        dplyr::summarise(Ventas = round(sum(Pesos),0),
+                         Utilidad = round(sum(Margen),0)) %>% 
         dplyr::arrange(Producto)
       
       conteo <- dplyr::select(.data = dataA, Producto) %>% 
         dplyr::count()
       
-      totales <- dplyr::select(.data = dataA, Producto, Estación, Ventas) %>% 
+      totales <- dplyr::select(.data = dataA, Producto, Estación, Ventas, Utilidad) %>% 
         dplyr::group_by(Producto) %>% 
-        dplyr::summarise(Total = sum(Ventas))
+        dplyr::summarise(TotalVentas = sum(Ventas),
+                         TotalUtlidad = sum(Utilidad))
       
       dataA <- data.frame(dataA)
       conteo <- data.frame(conteo)
@@ -929,11 +918,31 @@ if(interactive()){
                    totales[3,2], 
                    dataA[c(conteo[1,2]+conteo[2,2]+1):c(conteo[1,2]+conteo[2,2]+conteo[3,2]),3])
       
-      grafico <- plot_ly(data = dataA, 
-                         type = "treemap",
-                         labels=labels,
-                         parents= parents,
-                         values = valores,
+      Utilidad <- c(totales[1,3], 
+                   dataA[1:conteo[1,2],4], 
+                   totales[2,3], 
+                   dataA[c(conteo[1,2]+1):c(conteo[1,2]+conteo[2,2]),4], 
+                   totales[3,3], 
+                   dataA[c(conteo[1,2]+conteo[2,2]+1):c(conteo[1,2]+conteo[2,2]+conteo[3,2]),4])
+      
+      ids <- paste0(parents, "-" , labels)
+      
+      ids[1] <- "Diesel"
+      
+      ids[conteo[1,2]+2] <- "Super"
+      
+      ids[conteo[1,2]+conteo[2,2]+3] <- "VPower"
+      
+      dataMap <- cbind(ids, labels,parents,valores,Utilidad)
+      
+      dataMap <- data.frame(dataMap)
+      
+      grafico <- plot_ly(data = dataMap, 
+                         type = 'treemap',
+                         ids = dataMap$ids,
+                         labels = dataMap$labels,
+                         parents = dataMap$parents,
+                         values = dataMap$valores,
                          textposition = "top center",
                          branchvalues = "total") %>% 
         layout(plot_bgcolor = "#272c30",
@@ -984,11 +993,31 @@ if(interactive()){
                    totales[3,2], 
                    dataA[c(conteo[1,2]+conteo[2,2]+1):c(conteo[1,2]+conteo[2,2]+conteo[3,2]),3])
       
-      grafico <- plot_ly(data = dataA, 
-                         type = "treemap",
-                         labels=labels,
-                         parents= parents,
-                         values = valores,
+      Utilidad <- c(totales[1,3], 
+                    dataA[1:conteo[1,2],4], 
+                    totales[2,3], 
+                    dataA[c(conteo[1,2]+1):c(conteo[1,2]+conteo[2,2]),4], 
+                    totales[3,3], 
+                    dataA[c(conteo[1,2]+conteo[2,2]+1):c(conteo[1,2]+conteo[2,2]+conteo[3,2]),4])
+      
+      ids <- paste0(parents, "-" , labels)
+      
+      ids[1] <- "Diesel"
+      
+      ids[conteo[1,2]+2] <- "Super"
+      
+      ids[conteo[1,2]+conteo[2,2]+3] <- "VPower"
+      
+      dataMap <- cbind(ids, labels,parents,valores,Utilidad)
+      
+      dataMap <- data.frame(dataMap)
+      
+      grafico <- plot_ly(data = dataMap, 
+                         type = 'treemap',
+                         ids = dataMap$ids,
+                         labels=dataMap$labels,
+                         parents= dataMap$parents,
+                         values = dataMap$valores,
                          textposition = "top center",
                          branchvalues = "total") %>% 
         layout(plot_bgcolor = "#272c30",
@@ -996,25 +1025,26 @@ if(interactive()){
                margin=list(l=0, r=0, b=0, t=0),
                treemapcolorway=c("#075383", "#e33575", "#b4b4b4"))
       
-      
       grafico
       
     })
     
     grafica6 <- reactive({
       
-      dataA <- dplyr::select(.data = data(), Región, Estación, Fecha, Producto, Pesos) %>% 
+      dataA <- dplyr::select(.data = datos, Región, Estación, Fecha, Producto, Pesos, Margen) %>% 
         dplyr::filter(Región=="C") %>%
         dplyr::group_by(Producto, Estación) %>% 
-        dplyr::summarise(Ventas = round(sum(Pesos),0)) %>% 
+        dplyr::summarise(Ventas = round(sum(Pesos),0),
+                         Utilidad = round(sum(Margen),0)) %>% 
         dplyr::arrange(Producto)
       
       conteo <- dplyr::select(.data = dataA, Producto) %>% 
         dplyr::count()
       
-      totales <- dplyr::select(.data = dataA, Producto, Estación, Ventas) %>% 
+      totales <- dplyr::select(.data = dataA, Producto, Estación, Ventas, Utilidad) %>% 
         dplyr::group_by(Producto) %>% 
-        dplyr::summarise(Total = sum(Ventas))
+        dplyr::summarise(TotalVentas = sum(Ventas),
+                         TotalUtilidad = sum(Utilidad))
       
       dataA <- data.frame(dataA)
       conteo <- data.frame(conteo)
@@ -1039,11 +1069,31 @@ if(interactive()){
                    totales[3,2], 
                    dataA[c(conteo[1,2]+conteo[2,2]+1):c(conteo[1,2]+conteo[2,2]+conteo[3,2]),3])
       
-      grafico <- plot_ly(data = dataA, 
-                         type = "treemap",
-                         labels=labels,
-                         parents= parents,
-                         values = valores,
+      Utilidad <- c(totales[1,3], 
+                    dataA[1:conteo[1,2],4], 
+                    totales[2,3], 
+                    dataA[c(conteo[1,2]+1):c(conteo[1,2]+conteo[2,2]),4], 
+                    totales[3,3], 
+                    dataA[c(conteo[1,2]+conteo[2,2]+1):c(conteo[1,2]+conteo[2,2]+conteo[3,2]),4])
+      
+      ids <- paste0(parents, "-" , labels)
+      
+      ids[1] <- "Diesel"
+      
+      ids[conteo[1,2]+2] <- "Super"
+      
+      ids[conteo[1,2]+conteo[2,2]+3] <- "VPower"
+      
+      dataMap <- cbind(ids, labels,parents,valores,Utilidad)
+      
+      dataMap <- data.frame(dataMap)
+      
+      grafico <- plot_ly(data = dataMap, 
+                         type = 'treemap',
+                         ids = dataMap$ids,
+                         labels=dataMap$labels,
+                         parents= dataMap$parents,
+                         values = dataMap$valores,
                          textposition = "top center",
                          branchvalues = "total") %>% 
         layout(plot_bgcolor = "#272c30",
@@ -1051,12 +1101,11 @@ if(interactive()){
                margin=list(l=0, r=0, b=0, t=0),
                treemapcolorway=c("#075383", "#e33575", "#b4b4b4"))
       
-      
       grafico
       
     })
     
-    #Región B: Sucursales
+    #Región A: Sucursales
     
     dataSucursalAAd <- reactive({
       
@@ -1426,7 +1475,7 @@ if(interactive()){
     
     PCA <- reactive({
       
-      dataA <- dplyr::select(.data = data(), Región, Fecha, Producto, Estación, Pesos) %>% 
+      dataA <- dplyr::select(.data = datos, Región, Fecha, Producto, Estación, Pesos) %>% 
         dplyr::group_by(Estación, Región, Producto) %>% 
         dplyr::summarise(Pesos = sum(Pesos))
       
@@ -1453,9 +1502,13 @@ if(interactive()){
                                     '</br> VPower:', dataA$VPower)))+
         guides(color = guide_legend(title = "Región"))+
         ggthemes::theme_fivethirtyeight(base_size = 15) +
+        ggplot2::geom_vline(xintercept = 0, colour= "white", linetype = "dotted") +
+        ggplot2::geom_hline(yintercept = 0, colour= "white", linetype = "dotted") +
         ggplot2::xlab("")+
         ggplot2::labs(title = "Analisis de Componentes Principales", subtitle = "Biplot")+
         ggplot2::ylab("") +
+        ggplot2::xlim(c(-4,4)) +
+        ggplot2::ylim(c(-3,3)) +
         ggplot2::scale_colour_manual(values =  c("#e33575", "#075383", "#b4b4b4"))+
         ggplot2::theme(panel.grid.major = ggplot2::element_line(colour = "black"),
                        panel.grid.minor = ggplot2::element_blank(), 
@@ -1477,8 +1530,6 @@ if(interactive()){
       grafica <- ggplotly(grafica)
     })
     
-    
-  
     output$UtilidadA <- renderTable(dataUtilidadA(), colnames = FALSE, align = "l",spacing = "xs", digits = 0)  
     output$VentasA <- renderTable(dataVentasA(), colnames = FALSE, align = "l",spacing = "xs", digits = 0)
     output$CostosA <- renderTable(dataCostosA(),colnames = FALSE, align = "l",spacing = "xs", digits = 0)
@@ -1522,9 +1573,212 @@ if(interactive()){
     output$SucursalCBs <- renderTable(dataSucursalCBs(), colnames = TRUE, align = "l",spacing = "xs", digits = 0)
     output$SucursalCBv <- renderTable(dataSucursalCBv(), colnames = TRUE, align = "l",spacing = "xs", digits = 0)
     output$PCA <- renderPlotly(PCA())
+    output$Estación <- renderUI(selectInput(inputId = "Estación", 
+                                           label = "", 
+                                           choices = if(input$Región == "Total"){
+                                                        c("Total")
+                                                     }else{
+                                                      data.frame(rbind("Total", dplyr::filter(data(), Región == input$Región) %>% 
+                                                                                dplyr::distinct(Estación)))   
+                                                               }))
+    output$Producto <- renderUI(selectInput(inputId = "Producto", 
+                                            label = "", 
+                                            choices = if(input$Estación =="Total"){
+                                                         data.frame(rbind("Total", dplyr::distinct(data(), Producto)))
+                                            }else{
+                                              data.frame(rbind("Total", dplyr::filter(data(), Estación == input$Estación) %>% 
+                                                                        dplyr::distinct(Producto)))
+                                            }))
+    
+    DatosArima <- reactive({
+      
+      if(input$Región == "Total"){
+        if(input$Producto == "Total"){
+          
+          datosModelo <- dplyr::select(.data = datos, Región, Estación, Producto, Fecha, Pesos) %>% 
+            dplyr::filter(Fecha >= max(datos$Fecha)-90) %>% 
+            dplyr::group_by(Fecha) %>% 
+            dplyr::summarise(Ventas = sum(Pesos))
+        }else{
+          
+          datosModelo <- dplyr::select(.data = datos, Región, Estación, Producto, Fecha, Pesos) %>% 
+            dplyr::filter(Fecha >= max(datos$Fecha)-90) %>% 
+            dplyr::filter(Producto == input$Producto) %>% 
+            dplyr::group_by(Fecha) %>% 
+            dplyr::summarise(Ventas = sum(Pesos))
+        }
+      }else{
+        
+        if(input$Estación == "Total"){
+          if(input$Producto == "Total"){
+            
+            datosModelo <- dplyr::select(.data = datos, Región, Estación, Producto, Fecha, Pesos) %>% 
+              dplyr::filter(Fecha >= max(datos$Fecha)-90) %>% 
+              dplyr::filter(Región == input$Región) %>% 
+              dplyr::group_by(Fecha) %>% 
+              dplyr::summarise(Ventas = sum(Pesos))
+            
+          }else{
+            
+            datosModelo <- dplyr::select(.data = datos, Región, Estación, Producto, Fecha, Pesos) %>% 
+              dplyr::filter(Fecha >= max(datos$Fecha)-90) %>% 
+              dplyr::filter(Región == input$Región, Producto == input$Producto) %>% 
+              dplyr::group_by(Fecha) %>% 
+              dplyr::summarise(Ventas = sum(Pesos))
+          }
+        }else{
+          
+          if(input$Producto == "Total"){
+            
+            datosModelo <- dplyr::select(.data = datos, Región, Estación, Producto, Fecha, Pesos) %>% 
+              dplyr::filter(Fecha >= max(datos$Fecha)-90) %>% 
+              dplyr::filter(Región == input$Región, Estación == input$Estación) %>% 
+              dplyr::group_by(Fecha) %>% 
+              dplyr::summarise(Ventas = sum(Pesos))
+          }else{
+            
+            datosModelo <- dplyr::select(.data = datos, Región, Estación, Producto, Fecha, Pesos) %>% 
+              dplyr::filter(Fecha >= max(datos$Fecha)-90) %>% 
+              dplyr::filter(Región == input$Región, Estación == input$Estación, Producto == input$Producto) %>% 
+              dplyr::group_by(Fecha) %>% 
+              dplyr::summarise(Ventas = sum(Pesos))
+            
+          }
+        }
+      }
+      
+    })
+    Arima <- reactive({
+      
+      datosModelo <- data.frame(DatosArima())
+      rownames(datosModelo) <- datosModelo$Fecha
+      datosModelo <- datosModelo[2]
+      modelo <- forecast::auto.arima(datosModelo, stationary = TRUE)
+      pronosticos <- input$pronosticos
+      pronostico95 <- forecast::forecast(modelo, pronosticos, level=95)
+      pronostico80 <- forecast::forecast(modelo, pronosticos, level=80)
+      dias <- c(1:pronosticos , pronosticos:1)
+      x <- c(as.Date(max(rownames(datosModelo))) + dias)
+      
+      Fecha <- as.data.frame.Date(x[1:(length(x)/2)])
+      colnames(Fecha) <- "Fecha"
+      Pronostico <- pronostico95$mean
+      Pronostico <- format(Pronostico, big.mark = ",")
+      datosTabla <- data.frame(cbind(Fecha, Pronostico))
+      
+      
+      parte1 <- list(
+        line = list(
+          color = "#075383",
+          fillcolor = "#075383"),
+        mode = "lines",
+        name = "observed",
+        type = "scatter",
+        x= rownames(datosModelo),
+        y= datosModelo$Ventas,
+        xaxis = "x", 
+        yaxis = "y")
+      
+      parte2 <- list(
+        fill="toself",
+        line = list(
+          color = "#DADADA", 
+          fillcolor = "#DADADA"),
+        mode = "lines", 
+        name = "95% confidence", 
+        type = "scatter",
+        x = x,
+        y = c(pronostico95$upper, pronostico95$lower[pronosticos:1]),
+        xaxis = "x", 
+        yaxis = "y", 
+        hoveron = "points")
+      
+      parte3 <- list(
+        fill="toself",
+        line = list(
+          color = "#b4b4b4", 
+          fillcolor = "#b4b4b4"),
+        mode = "lines", 
+        name = "80% confidence", 
+        type = "scatter",
+        x = x,
+        y = c(pronostico80$upper, pronostico80$lower[pronosticos:1]),
+        xaxis = "x", 
+        yaxis = "y", 
+        hoveron = "points")
+      
+      parte4 <- list(
+        line = list(
+          color = "#e33575",
+          fillcolor = "#e33575"),
+        mode = "lines",
+        name = "prediction",
+        type = "scatter",
+        x= x[1:pronosticos],
+        y= pronostico95$mean,
+        xaxis = "x", 
+        yaxis = "y")
+      
+      data <- list(parte1, parte2, parte3, parte4)
+      
+      layout <- list(
+        title = "Pronostico de Ventas", 
+        xaxis = list(
+          title = "Tiempo", 
+          domain = c(0, 1)
+        ), 
+        yaxis = list(
+          title = "Ventas", 
+          domain = c(0, 1)
+        ), 
+        margin = list(
+          b = 40, 
+          l = 60, 
+          r = 10, 
+          t = 25
+        ))
+      
+      p <- plot_ly()
+      p <- add_trace(p, line=parte1$line, mode=parte1$mode, name=parte1$name, type=parte1$type, x=parte1$x, y=parte1$y, xaxis=parte1$xaxis, yaxis=parte1$yaxis)
+      p <- add_trace(p, fill=parte2$fill, fillcolor=parte2$line, line=parte2$line, mode=parte2$mode, name=parte2$name, type=parte2$type, x=parte2$x, y=parte2$y, xaxis=parte2$xaxis, yaxis=parte2$yaxis, hoveron=parte2$hoveron)
+      p <- add_trace(p, fill=parte3$fill, fillcolor=parte2$line, line=parte3$line, mode=parte3$mode, name=parte3$name, type=parte3$type, x=parte3$x, y=parte3$y, xaxis=parte3$xaxis, yaxis=parte3$yaxis, hoveron=parte3$hoveron)
+      p <- add_trace(p, line=parte4$line, mode=parte4$mode, name=parte4$name, type=parte4$type, x=parte4$x, y=parte4$y, xaxis=parte4$xaxis, yaxis=parte4$yaxis)
+      p <- layout(p, title=layout$title, xaxis=layout$xaxis, yaxis=layout$yaxis, margin=layout$margin)
+      p <- layout(p, plot_bgcolor = "#272c30", paper_bgcolor = "#272c30")
+      
+      p
+         
+    })
+    TablaArima <- reactive({
+      
+      datosModelo <- data.frame(DatosArima())
+      rownames(datosModelo) <- datosModelo$Fecha
+      datosModelo <- datosModelo[2]
+      modelo <- forecast::auto.arima(datosModelo, stationary = TRUE)
+      pronosticos <- input$pronosticos
+      pronostico95 <- forecast::forecast(modelo, pronosticos, level=95)
+      dias <- c(1:pronosticos , pronosticos:1)
+      x <- c(as.Date(max(rownames(datosModelo))) + dias)
+      
+      Fecha <- as.data.frame.Date(x[1:(length(x)/2)])
+      colnames(Fecha) <- "Fecha"
+      Pronostico <- pronostico95$mean
+      Pronostico <- format(Pronostico, big.mark = ",")
+      datosTabla <- data.frame(cbind(Fecha, Pronostico))
+      
+    })
+    
+    output$Arima <- renderPlotly(Arima())
+    output$Descarga <- downloadHandler(
+      filename = function(){
+        paste("PronosticoVentas-(",input$Región, input$Producto, input$Estación, ")", ".csv", sep = "")},
+      content = function(file) {
+        write.csv(TablaArima(), file)}
+    )
+    output$tablaPronostico <- renderTable(TablaArima())
+    
+    
   }
   
   shinyApp(ui = ui, server = server)
-  
-}
 
