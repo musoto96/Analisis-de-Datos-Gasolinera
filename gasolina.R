@@ -1,3 +1,5 @@
+#Library ----
+
 library(shiny)
 library(shinydashboard)
 library(shinydashboardPlus)
@@ -10,43 +12,32 @@ library(factoextra)
 library(tidyr)
 library(ggbiplot)
 library(forecast)
+library(shinymanager)
 
+#Contraseñas ----
 
+  contraseñas <- data.frame(
+    user = c("SBR-Gasolina"),
+    password = c("SBR333"),
+    stringsAsFactors = FALSE)
 
-options(scipen=999)
+#Error General ----
 
-datos <- data.frame(readxl::read_excel("C:/Users/0303u/Google Drive/Trabajo/Trabajo SBR/Shell/Dashboard Gasolina Dinamico/DatosGasolina.xlsx", sheet = "DatosShell"))
+  options(shiny.sanitize.errors = TRUE)  
 
-datos$Fecha <- as.Date(datos$Fecha)
-
-
-  header <- dashboardHeaderPlus(title = "Shell")
+#Base de Datos ----
   
-  sidebar <- dashboardSidebar({
-    sidebarMenu(
-      menuItem("Principal", tabName = "Principal", icon = icon("chart-line"),
-               menuSubItem("Región A", tabName = "RegiónA", icon = shiny::icon("stream")),
-               menuSubItem("Región B", tabName = "RegiónB", icon = shiny::icon("stream")),
-               menuSubItem("Región C", tabName = "RegiónC", icon = shiny::icon("stream"))),
-      menuItem("Avanzado", tabName = "Avanzado", icon = icon("laptop-code"),
-               menuSubItem("PCA", tabName = "PCA", icon = shiny::icon("stream")),
-               menuSubItem("Pronostico", tabName = "Pronostico", icon = shiny::icon("stream")),
-               menuSubItem("Ventas-vs-Precio", tabName = "Ventas-vs-Precio", icon = shiny::icon("stream"))),
-      dateRangeInput(inputId = "filtro", 
-                     label = "Periodo:",
-                     min = min(datos$Fecha),
-                     max = Sys.Date(),
-                     start = "2020-01-01",
-                     end = "2020-12-31",
-                     language = "es",
-                     separator = "A",
-                     format = "dd-mm-yyyy"),
-      uiOutput("filtro2")
-    )})
+  datos <- data.frame(readxl::read_excel("C:/Users/0303u/Google Drive/Trabajo/Trabajo SBR/Shell/Dashboard Gasolina Dinamico/DatosGasolina.xlsx", sheet = "DatosShell"))
   
-    datosFijos <- dplyr::filter(.data = datos, Fecha >= "2020-01-01" & Fecha <= "2020-12-31")
+  datos$Fecha <- as.Date(datos$Fecha)
+
+#Datos Fijos ----
+
+  datosFijos <- dplyr::filter(.data = datos, 
+                              Fecha >= "2020-01-01" & Fecha <= "2020-12-31")
   
-  datosFijosA <- dplyr::select(.data = datosFijos, Región, Fecha, Producto, Margen, Pesos, Costo, Litros, Importe, PrecioLitro) %>% 
+  datosFijosA <- dplyr::select(.data = datosFijos, 
+                               Región, Fecha, Producto, Margen, Pesos, Costo, Litros, Importe, PrecioLitro) %>% 
     dplyr::filter(Región=="A") %>%
     dplyr::summarise(Utilidad = round(sum(Margen),0),
                      Ventas = round(sum(Pesos),0),
@@ -55,7 +46,8 @@ datos$Fecha <- as.Date(datos$Fecha)
                      Despachos = round(sum(Importe),0),
                      Precio = round(mean(PrecioLitro),2))
   
-  datosFijosB <- dplyr::select(.data = datosFijos, Región, Fecha, Producto, Margen, Pesos, Costo, Litros, Importe, PrecioLitro) %>% 
+  datosFijosB <- dplyr::select(.data = datosFijos, 
+                               Región, Fecha, Producto, Margen, Pesos, Costo, Litros, Importe, PrecioLitro) %>% 
     dplyr::filter(Región=="B") %>%
     dplyr::summarise(Utilidad = round(sum(Margen),0),
                      Ventas = round(sum(Pesos),0),
@@ -64,7 +56,8 @@ datos$Fecha <- as.Date(datos$Fecha)
                      Despachos = round(sum(Importe),0),
                      Precio = round(mean(PrecioLitro),2))
   
-  datosFijosC <- dplyr::select(.data = datosFijos, Región, Fecha, Producto, Margen, Pesos, Costo, Litros, Importe, PrecioLitro) %>% 
+  datosFijosC <- dplyr::select(.data = datosFijos, 
+                               Región, Fecha, Producto, Margen, Pesos, Costo, Litros, Importe, PrecioLitro) %>% 
     dplyr::filter(Región=="C") %>%
     dplyr::summarise(Utilidad = round(sum(Margen),0),
                      Ventas = round(sum(Pesos),0),
@@ -80,8 +73,54 @@ datos$Fecha <- as.Date(datos$Fecha)
   datosFijosA <- data.frame(datosFijosA)
   datosFijosB <- data.frame(datosFijosB)
   datosFijosC <- data.frame(datosFijosC)
+
+#header ----
   
-  body <- dashboardBody(
+  header <- dashboardHeaderPlus(title = "Gasolinera", 
+                                enable_rightsidebar = TRUE,
+                                rightSidebarIcon = "sliders")
+#sidebar ----  
+  
+  sidebar <- dashboardSidebar({
+    sidebarMenu(
+      menuItem("Principal", tabName = "Principal", icon = icon("chart-line"),
+               menuSubItem("Región A", tabName = "RegiónA", icon = shiny::icon("stream")),
+               menuSubItem("Región B", tabName = "RegiónB", icon = shiny::icon("stream")),
+               menuSubItem("Región C", tabName = "RegiónC", icon = shiny::icon("stream"))),
+      menuItem("Avanzado", tabName = "Avanzado", icon = icon("laptop-code"),
+               menuSubItem("PCA", tabName = "PCA", icon = shiny::icon("stream")),
+               menuSubItem("Pronostico", tabName = "Pronostico", icon = shiny::icon("stream")),
+               menuSubItem("Ventas-vs-Precio", tabName = "Ventas-vs-Precio", icon = shiny::icon("stream")))
+               )
+                             })
+
+#rightSidebar ----
+  
+  rightsidebar <- rightSidebar(
+    rightSidebarTabContent(
+      id = 2,
+      active = TRUE,
+      title = "Periodo",
+      icon = "calendar-alt",
+      sliderInput(inputId = "filtro",
+                  label = "Periodo:",
+                  animate = TRUE,
+                  min = min(datos$Fecha),
+                  max = Sys.Date(),
+                  value = as.Date(c("2020-01-01", "2020-12-31"))),
+                  uiOutput("filtro2")),
+    rightSidebarTabContent(
+      id = 1,
+      title = "Periodicidad",
+      icon = "calendar-check",
+      radioButtons("periodo",
+                   "Periodicidad:",
+                   c("Diario", "Semanal", "Mensual"))))
+  
+#body ----
+
+  body <- dashboardBody({
+    verbatimTextOutput("usuario")
     tabItems(
       tabItem(tabName = "RegiónA",
               fluidRow(
@@ -91,7 +130,8 @@ datos$Fecha <- as.Date(datos$Fecha)
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = div(tableOutput("UtilidadA"),style="font-size:80%"),
+                  footer = div(tableOutput("UtilidadA"),
+                               style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosA[1], "   Anual")
                 ),
@@ -101,7 +141,8 @@ datos$Fecha <- as.Date(datos$Fecha)
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = div(tableOutput("VentasA"),style="font-size:80%"),
+                  footer = div(tableOutput("VentasA"),
+                               style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosA[2], "   Anual")
                 ),
@@ -111,7 +152,8 @@ datos$Fecha <- as.Date(datos$Fecha)
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = div(tableOutput("CostosA"),style="font-size:80%"),
+                  footer = div(tableOutput("CostosA"),
+                               style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosA[3], "   Anual")
                 ),
@@ -121,7 +163,8 @@ datos$Fecha <- as.Date(datos$Fecha)
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = div(tableOutput("LitrosA"),style="font-size:80%"),
+                  footer = div(tableOutput("LitrosA"),
+                               style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosA[4], "   Anual")
                 ),
@@ -131,7 +174,8 @@ datos$Fecha <- as.Date(datos$Fecha)
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = div(tableOutput("DespachoA"),style="font-size:80%"),
+                  footer = div(tableOutput("DespachoA"),
+                               style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosA[5], "   Anual")
                 ),
@@ -141,7 +185,8 @@ datos$Fecha <- as.Date(datos$Fecha)
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = div(tableOutput("PrecioA"),style="font-size:80%"),
+                  footer = div(tableOutput("PrecioA"),
+                               style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosA[6], "   Anual")
                 ),
@@ -155,9 +200,18 @@ datos$Fecha <- as.Date(datos$Fecha)
                 ),
                 boxPlus(tabBox(
                   width = 15,
-                  tabPanel(title = "Super", status = "primary", div(tableOutput("SucursalAAs"),style="font-size:90%")),
-                  tabPanel(title = "VPower", status = "primary", div(tableOutput("SucursalAAv"),style="font-size:90%")),
-                  tabPanel(title = "Diesel", status = "primary", div(tableOutput("SucursalAAd"),style="font-size:90%"))),
+                  tabPanel(title = "Super", 
+                           status = "primary", 
+                           div(tableOutput("SucursalAAs"),
+                               style="font-size:90%")),
+                  tabPanel(title = "VPower", 
+                           status = "primary", 
+                           div(tableOutput("SucursalAAv"),
+                               style="font-size:90%")),
+                  tabPanel(title = "Diesel", 
+                           status = "primary", 
+                           div(tableOutput("SucursalAAd"),
+                               style="font-size:90%"))),
                   title = "Sucursales con mayores ventas",
                   width = 4,
                   collapsible = TRUE,
@@ -166,9 +220,18 @@ datos$Fecha <- as.Date(datos$Fecha)
                   footer_padding = FALSE),
                 boxPlus(tabBox(
                   width = 15,
-                  tabPanel(title = "Super", status = "primary", div(tableOutput("SucursalABs"),style="font-size:90%")),
-                  tabPanel(title = "VPower", status = "primary", div(tableOutput("SucursalABv"),style="font-size:90%")),
-                  tabPanel(title = "Diesel", status = "primary", div(tableOutput("SucursalABd"),style="font-size:90%"))),
+                  tabPanel(title = "Super", 
+                           status = "primary", 
+                           div(tableOutput("SucursalABs"),
+                               style="font-size:90%")),
+                  tabPanel(title = "VPower",
+                           status = "primary", 
+                           div(tableOutput("SucursalABv"),
+                               style="font-size:90%")),
+                  tabPanel(title = "Diesel", 
+                           status = "primary", 
+                           div(tableOutput("SucursalABd"),
+                               style="font-size:90%"))),
                   title = "Sucursales con menores ventas",
                   width = 4,
                   collapsible = TRUE,
@@ -194,7 +257,8 @@ datos$Fecha <- as.Date(datos$Fecha)
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = div(tableOutput(outputId = "UtilidadB"),style="font-size:80%"),
+                  footer = div(tableOutput(outputId = "UtilidadB"),
+                               style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosB[1], "   Anual")
                 ),
@@ -204,7 +268,8 @@ datos$Fecha <- as.Date(datos$Fecha)
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = div(tableOutput("VentasB"),style="font-size:80%"),
+                  footer = div(tableOutput("VentasB"),
+                               style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosB[2], "   Anual")
                 ),
@@ -214,7 +279,8 @@ datos$Fecha <- as.Date(datos$Fecha)
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = div(tableOutput("CostosB"),style="font-size:80%"),
+                  footer = div(tableOutput("CostosB"),
+                               style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosB[3], "   Anual")
                 ),
@@ -224,7 +290,8 @@ datos$Fecha <- as.Date(datos$Fecha)
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = div(tableOutput("LitrosB"),style="font-size:80%"),
+                  footer = div(tableOutput("LitrosB"),
+                               style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosB[4], "   Anual")
                 ),
@@ -234,7 +301,8 @@ datos$Fecha <- as.Date(datos$Fecha)
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = div(tableOutput("DespachoB"),style="font-size:80%"),
+                  footer = div(tableOutput("DespachoB"),
+                               style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosB[5], "   Anual")
                 ),
@@ -244,7 +312,8 @@ datos$Fecha <- as.Date(datos$Fecha)
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = div(tableOutput("PrecioB"),style="font-size:80%"),
+                  footer = div(tableOutput("PrecioB"),
+                               style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosB[6], "   Anual")
                 ),
@@ -258,9 +327,18 @@ datos$Fecha <- as.Date(datos$Fecha)
                 ),
                 boxPlus(tabBox(
                   width = 15,
-                  tabPanel(title = "Super", status = "primary", div(tableOutput("SucursalBAs"),style="font-size:90%")),
-                  tabPanel(title = "VPower", status = "primary", div(tableOutput("SucursalBAv"),style="font-size:90%")),
-                  tabPanel(title = "Diesel", status = "primary", div(tableOutput("SucursalBAd"),style="font-size:90%"))),
+                  tabPanel(title = "Super", 
+                           status = "primary",
+                           div(tableOutput("SucursalBAs"),
+                               style="font-size:90%")),
+                  tabPanel(title = "VPower", 
+                           status = "primary", 
+                           div(tableOutput("SucursalBAv"),
+                               style="font-size:90%")),
+                  tabPanel(title = "Diesel", 
+                           status = "primary", 
+                           div(tableOutput("SucursalBAd"),
+                               style="font-size:90%"))),
                   title = "Sucursales con mayores ventas",
                   width = 4,
                   collapsible = TRUE,
@@ -269,9 +347,18 @@ datos$Fecha <- as.Date(datos$Fecha)
                   footer_padding = FALSE),
                 boxPlus(tabBox(
                   width = 15,
-                  tabPanel(title = "Super", status = "primary", div(tableOutput("SucursalBBs"),style="font-size:90%")),
-                  tabPanel(title = "VPower", status = "primary", div(tableOutput("SucursalBBv"),style="font-size:90%")),
-                  tabPanel(title = "Diesel", status = "primary", div(tableOutput("SucursalBBd"),style="font-size:90%"))),
+                  tabPanel(title = "Super", 
+                           status = "primary", 
+                           div(tableOutput("SucursalBBs"),
+                               style="font-size:90%")),
+                  tabPanel(title = "VPower",
+                           status = "primary", 
+                           div(tableOutput("SucursalBBv"),
+                               style="font-size:90%")),
+                  tabPanel(title = "Diesel", 
+                           status = "primary", 
+                           div(tableOutput("SucursalBBd"),
+                               style="font-size:90%"))),
                   title = "Sucursales con menores ventas",
                   width = 4,
                   collapsible = TRUE,
@@ -297,7 +384,8 @@ datos$Fecha <- as.Date(datos$Fecha)
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = div(tableOutput("UtilidadC"),style="font-size:80%"),
+                  footer = div(tableOutput("UtilidadC"),
+                               style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosC[1], "   Anual")
                 ),
@@ -307,7 +395,8 @@ datos$Fecha <- as.Date(datos$Fecha)
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = div(tableOutput("VentasC"),style="font-size:80%"),
+                  footer = div(tableOutput("VentasC"),
+                               style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosC[2], "   Anual")
                 ),
@@ -317,7 +406,8 @@ datos$Fecha <- as.Date(datos$Fecha)
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = div(tableOutput("CostosC"),style="font-size:80%"),
+                  footer = div(tableOutput("CostosC"),
+                               style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosC[3], "   Anual")
                 ),
@@ -327,7 +417,8 @@ datos$Fecha <- as.Date(datos$Fecha)
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = div(tableOutput("LitrosC"),style="font-size:80%"),
+                  footer = div(tableOutput("LitrosC"),
+                               style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosC[4], "   Anual")
                 ),
@@ -337,7 +428,8 @@ datos$Fecha <- as.Date(datos$Fecha)
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = div(tableOutput("DespachoC"),style="font-size:80%"),
+                  footer = div(tableOutput("DespachoC"),
+                               style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosC[5], "   Anual")
                 ),
@@ -347,7 +439,8 @@ datos$Fecha <- as.Date(datos$Fecha)
                   gradientColor = "maroon", 
                   boxToolSize = "xs",
                   width = 2,
-                  footer = div(tableOutput("PrecioC"),style="font-size:80%"),
+                  footer = div(tableOutput("PrecioC"),
+                               style="font-size:80%"),
                   footer_padding = FALSE,
                   paste0(datosFijosC[6], "   Anual")
                 ),
@@ -361,9 +454,18 @@ datos$Fecha <- as.Date(datos$Fecha)
                 ),
                 boxPlus(tabBox(
                   width = 15,
-                  tabPanel(title = "Super", status = "primary", div(tableOutput("SucursalCAs"),style="font-size:90%")),
-                  tabPanel(title = "VPower", status = "primary", div(tableOutput("SucursalCAv"),style="font-size:90%")),
-                  tabPanel(title = "Diesel", status = "primary", div(tableOutput("SucursalCAd"),style="font-size:90%"))),
+                  tabPanel(title = "Super", 
+                           status = "primary", 
+                           div(tableOutput("SucursalCAs"),
+                               style="font-size:90%")),
+                  tabPanel(title = "VPower", 
+                           status = "primary", 
+                           div(tableOutput("SucursalCAv"),
+                               style="font-size:90%")),
+                  tabPanel(title = "Diesel", 
+                           status = "primary", 
+                           div(tableOutput("SucursalCAd"),
+                               style="font-size:90%"))),
                   title = "Sucursales con mayores ventas",
                   width = 4,
                   collapsible = TRUE,
@@ -372,9 +474,18 @@ datos$Fecha <- as.Date(datos$Fecha)
                   footer_padding = FALSE),
                 boxPlus(tabBox(
                   width = 15,
-                  tabPanel(title = "Super", status = "primary", div(tableOutput("SucursalCBs"),style="font-size:90%")),
-                  tabPanel(title = "VPower", status = "primary", div(tableOutput("SucursalCBv"),style="font-size:90%")),
-                  tabPanel(title = "Diesel", status = "primary", div(tableOutput("SucursalCBd"),style="font-size:90%"))),
+                  tabPanel(title = "Super", 
+                           status = "primary", 
+                           div(tableOutput("SucursalCBs"),
+                               style="font-size:90%")),
+                  tabPanel(title = "VPower", 
+                           status = "primary", 
+                           div(tableOutput("SucursalCBv"),
+                               style="font-size:90%")),
+                  tabPanel(title = "Diesel", 
+                           status = "primary", 
+                           div(tableOutput("SucursalCBd"),
+                               style="font-size:90%"))),
                   title = "Sucursales con menores ventas",
                   width = 4,
                   collapsible = TRUE,
@@ -440,7 +551,11 @@ datos$Fecha <- as.Date(datos$Fecha)
                     closable = FALSE,
                     status = "primary",
                     footer_padding = FALSE,
-                    numericInput("pronosticos","", 7, min = 1, max = 31)),
+                    numericInput("pronosticos",
+                                 label = "", 
+                                 value = 7, 
+                                 min = 1, 
+                                 max = 31)),
                 boxPlus(
                   title = "Descarga Datos",
                   width = 2,
@@ -448,7 +563,8 @@ datos$Fecha <- as.Date(datos$Fecha)
                   closable = FALSE,
                   status = "primary",
                   footer_padding = FALSE,
-                  downloadButton("Descarga", label = "Descarga")),
+                  downloadButton("Descarga", 
+                                 label = "Descarga")),
                 boxPlus(
                   plotlyOutput("Arima",
                                height = "350px"),
@@ -465,32 +581,48 @@ datos$Fecha <- as.Date(datos$Fecha)
                   collapsible = TRUE,
                   closable = FALSE,
                   status = "maroon",
-                  footer_padding = FALSE)
+                  footer_padding = FALSE),
+                boxPlus(title = "Modelo",
+                    width = 3,
+                    status = "maroon",
+                    textOutput("modelo"))
               ))
     )
-  )
+  })
   
+#ui ----
   
+  ui <- dashboardPagePlus(header, sidebar, rightsidebar = rightsidebar, body, skin = "midnight")
   
+  ui <- secure_app(ui)
   
-  ui <- dashboardPagePlus(header, sidebar, body, skin = "midnight")
-  
+#server ----
   
   server <- function(input, output) {
     
+    #usuario
+    
+    usuario <- secure_server(
+      check_credentials = check_credentials(contraseñas))
+    
+    output$usuario <- renderPrint({
+      reactiveValuesToList(usuario)})
+    
     #Segundo filtro dinamico
     
-    output$filtro2 <- renderUI(sliderInput(inputId = "filtro2",
-                                           label = "Periodo",
-                                           format = "dd-mm-yyyy",
-                                           animate = TRUE,
-                                           min = input$filtro[1],
-                                           max = input$filtro[2],
-                                           value = as.Date(c(input$filtro[1],input$filtro[1]+7))))
+    output$filtro2 <- renderUI(dateRangeInput(inputId = "filtro2", 
+                                              label = "Periodo:",
+                                              min = min(datos$Fecha),
+                                              max = Sys.Date(),
+                                              start = input$filtro[1],
+                                              end = input$filtro[2],
+                                              language = "es",
+                                              separator = "A",
+                                              format = "dd-mm-yyyy"))
+    
+    #Datos
     
     data <- reactive({
-      
-      
       
       datos <- dplyr::filter(.data = datos, Fecha >= input$filtro2[1] & Fecha <= input$filtro2[2]) 
       
@@ -1530,6 +1662,9 @@ datos$Fecha <- as.Date(datos$Fecha)
       grafica <- ggplotly(grafica)
     })
     
+    
+    #Output 
+    
     output$UtilidadA <- renderTable(dataUtilidadA(), colnames = FALSE, align = "l",spacing = "xs", digits = 0)  
     output$VentasA <- renderTable(dataVentasA(), colnames = FALSE, align = "l",spacing = "xs", digits = 0)
     output$CostosA <- renderTable(dataCostosA(),colnames = FALSE, align = "l",spacing = "xs", digits = 0)
@@ -1596,13 +1731,11 @@ datos$Fecha <- as.Date(datos$Fecha)
         if(input$Producto == "Total"){
           
           datosModelo <- dplyr::select(.data = datos, Región, Estación, Producto, Fecha, Pesos) %>% 
-            dplyr::filter(Fecha >= max(datos$Fecha)-90) %>% 
             dplyr::group_by(Fecha) %>% 
             dplyr::summarise(Ventas = sum(Pesos))
         }else{
           
-          datosModelo <- dplyr::select(.data = datos, Región, Estación, Producto, Fecha, Pesos) %>% 
-            dplyr::filter(Fecha >= max(datos$Fecha)-90) %>% 
+          datosModelo <- dplyr::select(.data = datos, Región, Estación, Producto, Fecha, Pesos)%>% 
             dplyr::filter(Producto == input$Producto) %>% 
             dplyr::group_by(Fecha) %>% 
             dplyr::summarise(Ventas = sum(Pesos))
@@ -1613,7 +1746,6 @@ datos$Fecha <- as.Date(datos$Fecha)
           if(input$Producto == "Total"){
             
             datosModelo <- dplyr::select(.data = datos, Región, Estación, Producto, Fecha, Pesos) %>% 
-              dplyr::filter(Fecha >= max(datos$Fecha)-90) %>% 
               dplyr::filter(Región == input$Región) %>% 
               dplyr::group_by(Fecha) %>% 
               dplyr::summarise(Ventas = sum(Pesos))
@@ -1621,7 +1753,6 @@ datos$Fecha <- as.Date(datos$Fecha)
           }else{
             
             datosModelo <- dplyr::select(.data = datos, Región, Estación, Producto, Fecha, Pesos) %>% 
-              dplyr::filter(Fecha >= max(datos$Fecha)-90) %>% 
               dplyr::filter(Región == input$Región, Producto == input$Producto) %>% 
               dplyr::group_by(Fecha) %>% 
               dplyr::summarise(Ventas = sum(Pesos))
@@ -1631,14 +1762,12 @@ datos$Fecha <- as.Date(datos$Fecha)
           if(input$Producto == "Total"){
             
             datosModelo <- dplyr::select(.data = datos, Región, Estación, Producto, Fecha, Pesos) %>% 
-              dplyr::filter(Fecha >= max(datos$Fecha)-90) %>% 
               dplyr::filter(Región == input$Región, Estación == input$Estación) %>% 
               dplyr::group_by(Fecha) %>% 
               dplyr::summarise(Ventas = sum(Pesos))
           }else{
             
-            datosModelo <- dplyr::select(.data = datos, Región, Estación, Producto, Fecha, Pesos) %>% 
-              dplyr::filter(Fecha >= max(datos$Fecha)-90) %>% 
+            datosModelo <- dplyr::select(.data = datos, Región, Estación, Producto, Fecha, Pesos) %>%
               dplyr::filter(Región == input$Región, Estación == input$Estación, Producto == input$Producto) %>% 
               dplyr::group_by(Fecha) %>% 
               dplyr::summarise(Ventas = sum(Pesos))
@@ -1647,18 +1776,81 @@ datos$Fecha <- as.Date(datos$Fecha)
         }
       }
       
+      datosModeloF <- dplyr::filter(datosModelo, Fecha >= max(datosModelo$Fecha)-90) 
+      datosModeloF <- data.frame(datosModeloF)
+      rownames(datosModeloF) <- datosModeloF$Fecha
+      datosModelo <- datosModeloF[2]
+      
+    })
+    DatosArimaP <- reactive({
+      
+      if(input$Región == "Total"){
+        if(input$Producto == "Total"){
+          
+          datosModelo <- dplyr::select(.data = datos, Región, Estación, Producto, Fecha, Pesos) %>% 
+            dplyr::group_by(Fecha) %>% 
+            dplyr::summarise(Ventas = sum(Pesos))
+        }else{
+          
+          datosModelo <- dplyr::select(.data = datos, Región, Estación, Producto, Fecha, Pesos)%>% 
+            dplyr::filter(Producto == input$Producto) %>% 
+            dplyr::group_by(Fecha) %>% 
+            dplyr::summarise(Ventas = sum(Pesos))
+        }
+      }else{
+        
+        if(input$Estación == "Total"){
+          if(input$Producto == "Total"){
+            
+            datosModelo <- dplyr::select(.data = datos, Región, Estación, Producto, Fecha, Pesos) %>% 
+              dplyr::filter(Región == input$Región) %>% 
+              dplyr::group_by(Fecha) %>% 
+              dplyr::summarise(Ventas = sum(Pesos))
+            
+          }else{
+            
+            datosModelo <- dplyr::select(.data = datos, Región, Estación, Producto, Fecha, Pesos) %>% 
+              dplyr::filter(Región == input$Región, Producto == input$Producto) %>% 
+              dplyr::group_by(Fecha) %>% 
+              dplyr::summarise(Ventas = sum(Pesos))
+          }
+        }else{
+          
+          if(input$Producto == "Total"){
+            
+            datosModelo <- dplyr::select(.data = datos, Región, Estación, Producto, Fecha, Pesos) %>% 
+              dplyr::filter(Región == input$Región, Estación == input$Estación) %>% 
+              dplyr::group_by(Fecha) %>% 
+              dplyr::summarise(Ventas = sum(Pesos))
+          }else{
+            
+            datosModelo <- dplyr::select(.data = datos, Región, Estación, Producto, Fecha, Pesos) %>%
+              dplyr::filter(Región == input$Región, Estación == input$Estación, Producto == input$Producto) %>% 
+              dplyr::group_by(Fecha) %>% 
+              dplyr::summarise(Ventas = sum(Pesos))
+            
+          }
+        }
+      }
+      
+      datosModeloF <- dplyr::filter(datosModelo, Fecha >= max(datosModelo$Fecha)-90) 
+      datosModeloF <- data.frame(datosModeloF)
+      datosModeloF <- datosModeloF$Fecha
+      
     })
     Arima <- reactive({
+    
+      semana <- as.numeric(strftime( min(DatosArimaP()), format = "%V"))
+      dia <-  as.numeric(strftime( min(DatosArimaP()), format = "%u"))
       
-      datosModelo <- data.frame(DatosArima())
-      rownames(datosModelo) <- datosModelo$Fecha
-      datosModelo <- datosModelo[2]
-      modelo <- forecast::auto.arima(datosModelo, stationary = TRUE)
+      datosModelo1 <- ts(DatosArima(), frequency = 7, start = c(semana,dia))
+      modeloP <- forecast::auto.arima(DatosArima(), stepwise = FALSE)
+      modelo <- forecast::auto.arima(datosModelo1, stepwise = FALSE)
       pronosticos <- input$pronosticos
       pronostico95 <- forecast::forecast(modelo, pronosticos, level=95)
       pronostico80 <- forecast::forecast(modelo, pronosticos, level=80)
       dias <- c(1:pronosticos , pronosticos:1)
-      x <- c(as.Date(max(rownames(datosModelo))) + dias)
+      x <- c(as.Date(max(rownames(DatosArima()))) + dias)
       
       Fecha <- as.data.frame.Date(x[1:(length(x)/2)])
       colnames(Fecha) <- "Fecha"
@@ -1672,10 +1864,10 @@ datos$Fecha <- as.Date(datos$Fecha)
           color = "#075383",
           fillcolor = "#075383"),
         mode = "lines",
-        name = "observed",
+        name = "observados",
         type = "scatter",
         x= rownames(datosModelo),
-        y= datosModelo$Ventas,
+        y= modeloP$x,
         xaxis = "x", 
         yaxis = "y")
       
@@ -1685,7 +1877,7 @@ datos$Fecha <- as.Date(datos$Fecha)
           color = "#DADADA", 
           fillcolor = "#DADADA"),
         mode = "lines", 
-        name = "95% confidence", 
+        name = "95% de confianza", 
         type = "scatter",
         x = x,
         y = c(pronostico95$upper, pronostico95$lower[pronosticos:1]),
@@ -1699,7 +1891,7 @@ datos$Fecha <- as.Date(datos$Fecha)
           color = "#b4b4b4", 
           fillcolor = "#b4b4b4"),
         mode = "lines", 
-        name = "80% confidence", 
+        name = "80% de confianza", 
         type = "scatter",
         x = x,
         y = c(pronostico80$upper, pronostico80$lower[pronosticos:1]),
@@ -1712,7 +1904,7 @@ datos$Fecha <- as.Date(datos$Fecha)
           color = "#e33575",
           fillcolor = "#e33575"),
         mode = "lines",
-        name = "prediction",
+        name = "predicción",
         type = "scatter",
         x= x[1:pronosticos],
         y= pronostico95$mean,
@@ -1751,34 +1943,41 @@ datos$Fecha <- as.Date(datos$Fecha)
     })
     TablaArima <- reactive({
       
-      datosModelo <- data.frame(DatosArima())
-      rownames(datosModelo) <- datosModelo$Fecha
-      datosModelo <- datosModelo[2]
-      modelo <- forecast::auto.arima(datosModelo, stationary = TRUE)
+      dataModelo <- ts(DatosArima(), frequency = 7, start = c(semana,dia))
+      modelo <- forecast::auto.arima(dataModelo, stepwise = FALSE)
       pronosticos <- input$pronosticos
       pronostico95 <- forecast::forecast(modelo, pronosticos, level=95)
       dias <- c(1:pronosticos , pronosticos:1)
-      x <- c(as.Date(max(rownames(datosModelo))) + dias)
+      x <- c(as.Date(max(rownames(DatosArima()))) + dias)
       
       Fecha <- as.data.frame.Date(x[1:(length(x)/2)])
       colnames(Fecha) <- "Fecha"
       Pronostico <- pronostico95$mean
       Pronostico <- format(Pronostico, big.mark = ",")
       datosTabla <- data.frame(cbind(Fecha, Pronostico))
+      rownames(datosTabla) <- datosTabla$Fecha
+      datosTabla <- datosTabla[2]
       
     })
+    Modelo <- reactive({
+      modelo <- forecast::auto.arima(DatosArima(), stepwise = FALSE)
+      modelo <- modelo$arma
+    })
+    
     
     output$Arima <- renderPlotly(Arima())
+    output$tablaPronostico <- renderTable(TablaArima(), rownames = TRUE)
     output$Descarga <- downloadHandler(
       filename = function(){
         paste("PronosticoVentas-(",input$Región, input$Producto, input$Estación, ")", ".csv", sep = "")},
       content = function(file) {
-        write.csv(TablaArima(), file)}
-    )
-    output$tablaPronostico <- renderTable(TablaArima())
-    
-    
+        write.csv(TablaArima(), file)})
+    output$modelo <- renderText(Modelo())
+ 
   }
   
+#ShinyApp ----
+  
   shinyApp(ui = ui, server = server)
+
 
