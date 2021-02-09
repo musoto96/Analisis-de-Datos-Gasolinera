@@ -13,6 +13,7 @@ library(tidyr)
 library(ggbiplot)
 library(forecast)
 library(shinymanager)
+library(lubridate)
 
 #Contraseñas ----
 
@@ -30,6 +31,8 @@ library(shinymanager)
   datos <- data.frame(readxl::read_excel("C:/Users/0303u/Google Drive/Trabajo/Trabajo SBR/Shell/Dashboard Gasolina Dinamico/DatosGasolina.xlsx", sheet = "DatosShell"))
   
   datos$Fecha <- as.Date(datos$Fecha)
+  datos$Semana <- as.Date(datos$Semana)
+  datos$Mes <- as.Date(datos$Mes)
 
 #Datos Fijos ----
 
@@ -78,7 +81,20 @@ library(shinymanager)
   
   header <- dashboardHeaderPlus(title = "Gasolinera", 
                                 enable_rightsidebar = TRUE,
-                                rightSidebarIcon = "sliders")
+                                rightSidebarIcon = "sliders",
+                                left_menu = tagList(
+                                  dropdownBlock(
+                                    id = "Periodo",
+                                    title = "Periodo:",
+                                    badgeStatus = "info",
+                                    radioButtons(inputId =  "p",
+                                                 label = "Periodicidad:",
+                                                 choices = list("Diario" = "Diario", 
+                                                                "Semanal" = "Semanal", 
+                                                                "Mensual" = "Mensual"))
+                                  )
+                                ))
+  
 #sidebar ----  
   
   sidebar <- dashboardSidebar({
@@ -104,18 +120,11 @@ library(shinymanager)
       icon = "calendar-alt",
       sliderInput(inputId = "filtro",
                   label = "Periodo:",
-                  animate = TRUE,
+                  animate =   animationOptions(interval = 200, loop = TRUE),
                   min = min(datos$Fecha),
                   max = Sys.Date(),
                   value = as.Date(c("2020-01-01", "2020-12-31"))),
-                  uiOutput("filtro2")),
-    rightSidebarTabContent(
-      id = 1,
-      title = "Periodicidad",
-      icon = "calendar-check",
-      radioButtons("periodo",
-                   "Periodicidad:",
-                   c("Diario", "Semanal", "Mensual"))))
+                  uiOutput("filtro2")))
   
 #body ----
 
@@ -586,6 +595,59 @@ library(shinymanager)
                     width = 3,
                     status = "maroon",
                     textOutput("modelo"))
+              )),
+      tabItem(tabName = "Ventas-vs-Precio",
+              fluidRow(
+                boxPlus(
+                  title = "Sucursal",
+                  width = 4,
+                  collapsible = TRUE,
+                  closable = FALSE,
+                  status = "primary",
+                  footer_padding = FALSE,
+                  uiOutput("Estación2")),
+                boxPlus(
+                  title = "Producto",
+                  width = 4,
+                  collapsible = TRUE,
+                  closable = FALSE,
+                  status = "primary",
+                  footer_padding = FALSE,
+                  uiOutput("Producto2")),
+                boxPlus(
+                  title = "Correlación",
+                  width = 4,
+                  collapsible = TRUE,
+                  closable = FALSE,
+                  status = "primary",
+                  footer_padding = FALSE,
+                  textOutput("correlación")),
+                boxPlus(
+                  title = "Correlación",
+                  width = 8,
+                  collapsible = TRUE,
+                  closable = FALSE,
+                  status = "maroon",
+                  footer_padding = FALSE,
+                  plotlyOutput("CorrelaciónPlot",
+                               height = "350px")),
+                boxPlus(
+                  title = "Precio",
+                  width = 4,
+                  collapsible = TRUE,
+                  closable = FALSE,
+                  status = "maroon",
+                  footer_padding = FALSE,
+                  plotlyOutput("Precio",
+                               height = "200px")),
+                boxPlus(
+                  title = "Interpretación",
+                  width = 4,
+                  collapsible = TRUE,
+                  closable = FALSE,
+                  status = "maroon",
+                  footer_padding = FALSE,
+                  textOutput("Interpretación"))
               ))
     )
   })
@@ -622,10 +684,55 @@ library(shinymanager)
     
     #Datos
     
-    data <- reactive({
+    d <- reactive({
       
       datos <- dplyr::filter(.data = datos, Fecha >= input$filtro2[1] & Fecha <= input$filtro2[2]) 
       
+    })
+
+    data <- reactive({
+      
+      if(input$p == "Diario"){
+        
+        dato <- d()
+        
+      }else{
+        
+        if(input$p == "Semanal"){
+          
+          dato <- dplyr::group_by(.data = d(), Región, Estación, Producto, Semana) %>%
+            dplyr::summarise(Importe = sum(Importe),
+                             Litros = sum(Litros),
+                             Pesos = sum(Pesos),
+                             Costo = sum(Costo),
+                             Margen = sum(Margen),
+                             PrecioLitro =round(mean(PrecioLitro),2))
+          
+          dato <- dplyr::mutate(.data = dato,
+                                Fecha = Semana)
+          
+          dato <- data.frame(dato)
+          
+        }else{
+          
+          dato <- dplyr::group_by(.data = d(), Región, Estación, Producto, Mes) %>%
+            dplyr::summarise(Importe = sum(Importe),
+                             Litros = sum(Litros),
+                             Pesos = sum(Pesos),
+                             Costo = sum(Costo),
+                             Margen = sum(Margen),
+                             PrecioLitro =round(mean(PrecioLitro),2))
+          
+          dato <- dplyr::mutate(.data = dato,
+                                Fecha = Mes)
+        
+          dato <- data.frame(dato)
+          
+        }
+      }
+      
+      dato <- dato
+
     })
     
     #KPI región A
@@ -1626,7 +1733,7 @@ library(shinymanager)
       dataA <- data.frame(dataA)
       
       grafica <- ggbiplot::ggbiplot(pcobj = PCA) +
-        geom_point(size = 3 ,
+        geom_point(size = 2 ,
                    aes(color = dataA$Región,
                        text = paste("Sucursal:" , dataA$Estación,
                                     '</br> Diesel:' ,dataA$Diesel,
@@ -1661,7 +1768,6 @@ library(shinymanager)
       
       grafica <- ggplotly(grafica)
     })
-    
     
     #Output 
     
@@ -1708,6 +1814,14 @@ library(shinymanager)
     output$SucursalCBs <- renderTable(dataSucursalCBs(), colnames = TRUE, align = "l",spacing = "xs", digits = 0)
     output$SucursalCBv <- renderTable(dataSucursalCBv(), colnames = TRUE, align = "l",spacing = "xs", digits = 0)
     output$PCA <- renderPlotly(PCA())
+    output$Estación2 <- renderUI(selectInput(inputId = "Estación2", 
+                                            label = "", 
+                                            choices = data.frame(dplyr::distinct(.data = data(), 
+                                                                                 Estación))))
+    output$Producto2 <- renderUI(selectInput(inputId = "Producto2", 
+                                             label = "", 
+                                             choices = data.frame(dplyr::filter(data(), Estación == input$Estación2) %>% 
+                                                                  dplyr::distinct(Producto))))
     output$Estación <- renderUI(selectInput(inputId = "Estación", 
                                            label = "", 
                                            choices = if(input$Región == "Total"){
@@ -1725,17 +1839,62 @@ library(shinymanager)
                                                                         dplyr::distinct(Producto)))
                                             }))
     
+    dataArima <- reactive({
+      
+      if(input$p == "Diario"){
+        
+        dato <- datos
+        
+      }else{
+        
+        if(input$p == "Semanal"){
+          
+          dato <- dplyr::group_by(.data = datos, Región, Estación, Producto, Semana) %>%
+            dplyr::summarise(Importe = sum(Importe),
+                             Litros = sum(Litros),
+                             Pesos = sum(Pesos),
+                             Costo = sum(Costo),
+                             Margen = sum(Margen),
+                             PrecioLitro =round(mean(PrecioLitro),2))
+          
+          dato <- dplyr::mutate(.data = dato,
+                                Fecha = Semana)
+          
+          dato <- data.frame(dato)
+          
+        }else{
+          
+          dato <- dplyr::group_by(.data = datos, Región, Estación, Producto, Mes) %>%
+            dplyr::summarise(Importe = sum(Importe),
+                             Litros = sum(Litros),
+                             Pesos = sum(Pesos),
+                             Costo = sum(Costo),
+                             Margen = sum(Margen),
+                             PrecioLitro =round(mean(PrecioLitro),2))
+          
+          dato <- dplyr::mutate(.data = dato,
+                                Fecha = Mes)
+          
+          dato <- data.frame(dato)
+          
+        }
+      }
+      
+      dato <- dato
+      
+    }) 
     DatosArima <- reactive({
       
       if(input$Región == "Total"){
         if(input$Producto == "Total"){
           
-          datosModelo <- dplyr::select(.data = datos, Región, Estación, Producto, Fecha, Pesos) %>% 
+          datosModelo <- dplyr::select(.data = dataArima(), Región, Estación, Producto, Fecha, Pesos) %>% 
             dplyr::group_by(Fecha) %>% 
             dplyr::summarise(Ventas = sum(Pesos))
+          
         }else{
           
-          datosModelo <- dplyr::select(.data = datos, Región, Estación, Producto, Fecha, Pesos)%>% 
+          datosModelo <- dplyr::select(.data = dataArima(), Región, Estación, Producto, Fecha, Pesos)%>% 
             dplyr::filter(Producto == input$Producto) %>% 
             dplyr::group_by(Fecha) %>% 
             dplyr::summarise(Ventas = sum(Pesos))
@@ -1745,14 +1904,14 @@ library(shinymanager)
         if(input$Estación == "Total"){
           if(input$Producto == "Total"){
             
-            datosModelo <- dplyr::select(.data = datos, Región, Estación, Producto, Fecha, Pesos) %>% 
+            datosModelo <- dplyr::select(.data = dataArima(), Región, Estación, Producto, Fecha, Pesos) %>% 
               dplyr::filter(Región == input$Región) %>% 
               dplyr::group_by(Fecha) %>% 
               dplyr::summarise(Ventas = sum(Pesos))
             
           }else{
             
-            datosModelo <- dplyr::select(.data = datos, Región, Estación, Producto, Fecha, Pesos) %>% 
+            datosModelo <- dplyr::select(.data = dataArima(), Región, Estación, Producto, Fecha, Pesos) %>% 
               dplyr::filter(Región == input$Región, Producto == input$Producto) %>% 
               dplyr::group_by(Fecha) %>% 
               dplyr::summarise(Ventas = sum(Pesos))
@@ -1761,13 +1920,14 @@ library(shinymanager)
           
           if(input$Producto == "Total"){
             
-            datosModelo <- dplyr::select(.data = datos, Región, Estación, Producto, Fecha, Pesos) %>% 
+            datosModelo <- dplyr::select(.data = dataArima(), Región, Estación, Producto, Fecha, Pesos) %>% 
               dplyr::filter(Región == input$Región, Estación == input$Estación) %>% 
               dplyr::group_by(Fecha) %>% 
               dplyr::summarise(Ventas = sum(Pesos))
+            
           }else{
             
-            datosModelo <- dplyr::select(.data = datos, Región, Estación, Producto, Fecha, Pesos) %>%
+            datosModelo <- dplyr::select(.data = dataArima(), Región, Estación, Producto, Fecha, Pesos) %>%
               dplyr::filter(Región == input$Región, Estación == input$Estación, Producto == input$Producto) %>% 
               dplyr::group_by(Fecha) %>% 
               dplyr::summarise(Ventas = sum(Pesos))
@@ -1776,10 +1936,31 @@ library(shinymanager)
         }
       }
       
-      datosModeloF <- dplyr::filter(datosModelo, Fecha >= max(datosModelo$Fecha)-90) 
-      datosModeloF <- data.frame(datosModeloF)
-      rownames(datosModeloF) <- datosModeloF$Fecha
-      datosModelo <- datosModeloF[2]
+      if(input$p == "Diario"){
+        
+        datosModeloF <- dplyr::filter(datosModelo, Fecha >= max(datosModelo$Fecha)-90) 
+        datosModeloF <- data.frame(datosModeloF)
+        rownames(datosModeloF) <- datosModeloF$Fecha
+        datosModelo <- datosModeloF[2]
+        
+      }else{
+        if(input$p == "Semanal"){
+          
+          datosModeloF <- dplyr::filter(datosModelo, Fecha >= max(datosModelo$Fecha)-360) 
+          datosModeloF <- data.frame(datosModeloF)
+          rownames(datosModeloF) <- datosModeloF$Fecha
+          datosModelo <- datosModeloF[2]
+          
+        }else{
+          
+          datosModeloF <- data.frame(datosModeloF)
+          rownames(datosModeloF) <- datosModeloF$Fecha
+          datosModelo <- datosModeloF[2]
+          
+        }
+      }
+      
+      
       
     })
     DatosArimaP <- reactive({
@@ -1787,12 +1968,13 @@ library(shinymanager)
       if(input$Región == "Total"){
         if(input$Producto == "Total"){
           
-          datosModelo <- dplyr::select(.data = datos, Región, Estación, Producto, Fecha, Pesos) %>% 
+          datosModelo <- dplyr::select(.data = dataArima(), Región, Estación, Producto, Fecha, Pesos) %>% 
             dplyr::group_by(Fecha) %>% 
             dplyr::summarise(Ventas = sum(Pesos))
+          
         }else{
           
-          datosModelo <- dplyr::select(.data = datos, Región, Estación, Producto, Fecha, Pesos)%>% 
+          datosModelo <- dplyr::select(.data = dataArima(), Región, Estación, Producto, Fecha, Pesos)%>% 
             dplyr::filter(Producto == input$Producto) %>% 
             dplyr::group_by(Fecha) %>% 
             dplyr::summarise(Ventas = sum(Pesos))
@@ -1802,14 +1984,14 @@ library(shinymanager)
         if(input$Estación == "Total"){
           if(input$Producto == "Total"){
             
-            datosModelo <- dplyr::select(.data = datos, Región, Estación, Producto, Fecha, Pesos) %>% 
+            datosModelo <- dplyr::select(.data = dataArima(), Región, Estación, Producto, Fecha, Pesos) %>% 
               dplyr::filter(Región == input$Región) %>% 
               dplyr::group_by(Fecha) %>% 
               dplyr::summarise(Ventas = sum(Pesos))
             
           }else{
             
-            datosModelo <- dplyr::select(.data = datos, Región, Estación, Producto, Fecha, Pesos) %>% 
+            datosModelo <- dplyr::select(.data = dataArima(), Región, Estación, Producto, Fecha, Pesos) %>% 
               dplyr::filter(Región == input$Región, Producto == input$Producto) %>% 
               dplyr::group_by(Fecha) %>% 
               dplyr::summarise(Ventas = sum(Pesos))
@@ -1818,13 +2000,13 @@ library(shinymanager)
           
           if(input$Producto == "Total"){
             
-            datosModelo <- dplyr::select(.data = datos, Región, Estación, Producto, Fecha, Pesos) %>% 
+            datosModelo <- dplyr::select(.data = dataArima(), Región, Estación, Producto, Fecha, Pesos) %>% 
               dplyr::filter(Región == input$Región, Estación == input$Estación) %>% 
               dplyr::group_by(Fecha) %>% 
               dplyr::summarise(Ventas = sum(Pesos))
           }else{
             
-            datosModelo <- dplyr::select(.data = datos, Región, Estación, Producto, Fecha, Pesos) %>%
+            datosModelo <- dplyr::select(.data = dataArima(), Región, Estación, Producto, Fecha, Pesos) %>%
               dplyr::filter(Región == input$Región, Estación == input$Estación, Producto == input$Producto) %>% 
               dplyr::group_by(Fecha) %>% 
               dplyr::summarise(Ventas = sum(Pesos))
@@ -1833,30 +2015,98 @@ library(shinymanager)
         }
       }
       
-      datosModeloF <- dplyr::filter(datosModelo, Fecha >= max(datosModelo$Fecha)-90) 
-      datosModeloF <- data.frame(datosModeloF)
-      datosModeloF <- datosModeloF$Fecha
+      if(input$p == "Diario"){
+        
+        datosModeloF <- dplyr::filter(datosModelo, Fecha >= max(datosModelo$Fecha)-90) 
+        datosModeloF <- data.frame(datosModeloF)
+        datosModeloF <- datosModeloF$Fecha
+        
+      }else{
+        if(input$p == "Semanal") {
+          
+          datosModeloF <- dplyr::filter(datosModelo, Fecha >= max(datosModelo$Fecha)-360) 
+          datosModeloF <- data.frame(datosModeloF)
+          datosModeloF <- datosModeloF$Fecha
+          
+        }else{
+          
+          datosModeloF <- data.frame(datosModeloF)
+          datosModeloF <- datosModeloF$Fecha
+          
+        }
+      }
+      
+      
       
     })
     Arima <- reactive({
+      
+      if(input$p == "Diario"){
+        
+        semana <- as.numeric(strftime( min(DatosArimaP()), format = "%V"))
+        dia <-  as.numeric(strftime( min(DatosArimaP()), format = "%u"))
+        
+        datosModelo1 <- ts(DatosArima(), frequency = 7, start = c(semana,dia))
+        modeloP <- forecast::auto.arima(DatosArima())
+        modelo <- forecast::auto.arima(datosModelo1)
+        pronosticos <- input$pronosticos
+        pronostico95 <- forecast::forecast(modelo, pronosticos, level=95)
+        pronostico80 <- forecast::forecast(modelo, pronosticos, level=80)
+        dias <- c(1:pronosticos , pronosticos:1)
+        x <- c(as.Date(max(rownames(DatosArima()))) + dias)
+        
+        Fecha <- as.data.frame.Date(x[1:(length(x)/2)])
+        colnames(Fecha) <- "Fecha"
+        Pronostico <- pronostico95$mean
+        Pronostico <- format(Pronostico, big.mark = ",")
+        datosTabla <- data.frame(cbind(Fecha, Pronostico))
+   
+      } else{
+        
+        if(input$p == "Semanal"){
+
+          mes <- as.numeric(strftime( min(DatosArimaP()), format = "%m"))
+          
+          datosModelo1 <- ts(DatosArima(), frequency = 4, start = c(mes,1))
+          modeloP <- forecast::auto.arima(DatosArima())
+          modelo <- forecast::auto.arima(datosModelo1)
+          pronosticos <- input$pronosticos
+          pronostico95 <- forecast::forecast(modelo, pronosticos, level=95)
+          pronostico80 <- forecast::forecast(modelo, pronosticos, level=80)
+          dias <- c(1:pronosticos , pronosticos:1) * 7
+          x <- c(as.Date(max(rownames(DatosArima()))) + dias)
+          
+          Fecha <- as.data.frame.Date(x[1:(length(x)/2)])
+          colnames(Fecha) <- "Fecha"
+          Pronostico <- pronostico95$mean
+          Pronostico <- format(Pronostico, big.mark = ",")
+          datosTabla <- data.frame(cbind(Fecha, Pronostico))
+          
+        }else{
+          
+          año <- as.numeric(strftime(min(DatosArimaP()), format = "%Y"))
+          mes <- as.numeric(strftime( min(DatosArimaP()), format = "%m"))
+          
+          datosModelo1 <- ts(DatosArima(), frequency = 12, start = c(año,mes))
+          modeloP <- forecast::auto.arima(DatosArima())
+          modelo <- forecast::auto.arima(datosModelo1)
+          pronosticos <- input$pronosticos
+          pronostico95 <- forecast::forecast(modelo, pronosticos, level=95)
+          pronostico80 <- forecast::forecast(modelo, pronosticos, level=80)
+          dias <- c(1:pronosticos , pronosticos:1) * 31
+          x <- c(as.Date(max(rownames(DatosArima()))) + dias)
+          
+          Fecha <- as.data.frame.Date(x[1:(length(x)/2)])
+          colnames(Fecha) <- "Fecha"
+          Pronostico <- pronostico95$mean
+          Pronostico <- format(Pronostico, big.mark = ",")
+          datosTabla <- data.frame(cbind(Fecha, Pronostico))
+          
+        }
+        
+      }
     
-      semana <- as.numeric(strftime( min(DatosArimaP()), format = "%V"))
-      dia <-  as.numeric(strftime( min(DatosArimaP()), format = "%u"))
       
-      datosModelo1 <- ts(DatosArima(), frequency = 7, start = c(semana,dia))
-      modeloP <- forecast::auto.arima(DatosArima(), stepwise = FALSE)
-      modelo <- forecast::auto.arima(datosModelo1, stepwise = FALSE)
-      pronosticos <- input$pronosticos
-      pronostico95 <- forecast::forecast(modelo, pronosticos, level=95)
-      pronostico80 <- forecast::forecast(modelo, pronosticos, level=80)
-      dias <- c(1:pronosticos , pronosticos:1)
-      x <- c(as.Date(max(rownames(DatosArima()))) + dias)
-      
-      Fecha <- as.data.frame.Date(x[1:(length(x)/2)])
-      colnames(Fecha) <- "Fecha"
-      Pronostico <- pronostico95$mean
-      Pronostico <- format(Pronostico, big.mark = ",")
-      datosTabla <- data.frame(cbind(Fecha, Pronostico))
       
       
       parte1 <- list(
@@ -1866,7 +2116,7 @@ library(shinymanager)
         mode = "lines",
         name = "observados",
         type = "scatter",
-        x= rownames(datosModelo),
+        x= rownames(DatosArima()),
         y= modeloP$x,
         xaxis = "x", 
         yaxis = "y")
@@ -1943,25 +2193,112 @@ library(shinymanager)
     })
     TablaArima <- reactive({
       
-      dataModelo <- ts(DatosArima(), frequency = 7, start = c(semana,dia))
-      modelo <- forecast::auto.arima(dataModelo, stepwise = FALSE)
-      pronosticos <- input$pronosticos
-      pronostico95 <- forecast::forecast(modelo, pronosticos, level=95)
-      dias <- c(1:pronosticos , pronosticos:1)
-      x <- c(as.Date(max(rownames(DatosArima()))) + dias)
-      
-      Fecha <- as.data.frame.Date(x[1:(length(x)/2)])
-      colnames(Fecha) <- "Fecha"
-      Pronostico <- pronostico95$mean
-      Pronostico <- format(Pronostico, big.mark = ",")
-      datosTabla <- data.frame(cbind(Fecha, Pronostico))
-      rownames(datosTabla) <- datosTabla$Fecha
-      datosTabla <- datosTabla[2]
+      if(input$p == "Diario"){
+        
+        semana <- as.numeric(strftime( min(DatosArimaP()), format = "%V"))
+        dia <-  as.numeric(strftime( min(DatosArimaP()), format = "%u"))
+        
+        datosModelo1 <- ts(DatosArima(), frequency = 7, start = c(semana,dia))
+        modeloP <- forecast::auto.arima(DatosArima())
+        modelo <- forecast::auto.arima(datosModelo1)
+        pronosticos <- input$pronosticos
+        pronostico95 <- forecast::forecast(modelo, pronosticos, level=95)
+        pronostico80 <- forecast::forecast(modelo, pronosticos, level=80)
+        dias <- c(1:pronosticos , pronosticos:1)
+        x <- c(as.Date(max(rownames(DatosArima()))) + dias)
+        
+        Fecha <- as.data.frame.Date(x[1:(length(x)/2)])
+        colnames(Fecha) <- "Fecha"
+        Pronostico <- pronostico95$mean
+        Pronostico <- format(Pronostico, big.mark = ",")
+        datosTabla <- data.frame(cbind(Fecha, Pronostico))
+        rownames(datosTabla) <- datosTabla$Fecha
+        datosTabla <- datosTabla[2]
+        
+      } else{
+        
+        if(input$p == "Semanal"){
+          
+          mes <- as.numeric(strftime( min(DatosArimaP()), format = "%m"))
+          
+          datosModelo1 <- ts(DatosArima(), frequency = 4, start = c(mes,1))
+          modeloP <- forecast::auto.arima(DatosArima())
+          modelo <- forecast::auto.arima(datosModelo1)
+          pronosticos <- input$pronosticos
+          pronostico95 <- forecast::forecast(modelo, pronosticos, level=95)
+          pronostico80 <- forecast::forecast(modelo, pronosticos, level=80)
+          dias <- c(1:pronosticos , pronosticos:1) * 7
+          x <- c(as.Date(max(rownames(DatosArima()))) + dias)
+          
+          Fecha <- as.data.frame.Date(x[1:(length(x)/2)])
+          colnames(Fecha) <- "Fecha"
+          Pronostico <- pronostico95$mean
+          Pronostico <- format(Pronostico, big.mark = ",")
+          datosTabla <- data.frame(cbind(Fecha, Pronostico))
+          rownames(datosTabla) <- datosTabla$Fecha
+          datosTabla <- datosTabla[2]
+          
+        }else{
+          
+          año <- as.numeric(strftime(min(DatosArimaP()), format = "%Y"))
+          mes <- as.numeric(strftime( min(DatosArimaP()), format = "%m"))
+          
+          datosModelo1 <- ts(DatosArima(), frequency = 12, start = c(año,mes))
+          modeloP <- forecast::auto.arima(DatosArima())
+          modelo <- forecast::auto.arima(datosModelo1)
+          pronosticos <- input$pronosticos
+          pronostico95 <- forecast::forecast(modelo, pronosticos, level=95)
+          pronostico80 <- forecast::forecast(modelo, pronosticos, level=80)
+          dias <- c(1:pronosticos , pronosticos:1) * 31
+          x <- c(as.Date(max(rownames(DatosArima()))) + dias)
+          
+          Fecha <- as.data.frame.Date(x[1:(length(x)/2)])
+          colnames(Fecha) <- "Fecha"
+          Pronostico <- pronostico95$mean
+          Pronostico <- format(Pronostico, big.mark = ",")
+          datosTabla <- data.frame(cbind(Fecha, Pronostico))
+          rownames(datosTabla) <- datosTabla$Fecha
+          datosTabla <- datosTabla[2]
+          
+        }
+        
+      }
       
     })
     Modelo <- reactive({
-      modelo <- forecast::auto.arima(DatosArima(), stepwise = FALSE)
-      modelo <- modelo$arma
+      
+      if(input$p == "Diario"){
+        
+        semana <- as.numeric(strftime( min(DatosArimaP()), format = "%V"))
+        dia <-  as.numeric(strftime( min(DatosArimaP()), format = "%u"))
+        
+        datosModelo1 <- ts(DatosArima(), frequency = 7, start = c(semana,dia))
+        modelo <- forecast::auto.arima(datosModelo1)
+        modelo <- modelo$arma
+        
+      } else{
+        
+        if(input$p == "Semanal"){
+          
+          mes <- as.numeric(strftime( min(DatosArimaP()), format = "%m"))
+          
+          datosModelo1 <- ts(DatosArima(), frequency = 4, start = c(mes,1))
+          modelo <- forecast::auto.arima(datosModelo1)
+          modelo <- modelo$arma
+          
+        }else{
+          
+          año <- as.numeric(strftime(min(DatosArimaP()), format = "%Y"))
+          mes <- as.numeric(strftime( min(DatosArimaP()), format = "%m"))
+          
+          datosModelo1 <- ts(DatosArima(), frequency = 12, start = c(año, mes))
+          modelo <- forecast::auto.arima(datosModelo1)
+          modelo <- modelo$arma
+          
+        }
+        
+      }
+      
     })
     
     
@@ -1973,7 +2310,90 @@ library(shinymanager)
       content = function(file) {
         write.csv(TablaArima(), file)})
     output$modelo <- renderText(Modelo())
- 
+    
+    #Correlación
+    
+    datosCorrelación <- reactive({
+      
+      data <- dplyr::select(.data = datos, Estación, Producto, Pesos, PrecioLitro) %>% 
+        dplyr::group_by(Estación, Producto) %>% 
+        dplyr::summarise(Correlación = cor(Pesos, PrecioLitro)) %>% 
+        dplyr::arrange(Correlación)
+      
+      data$Correlación[is.na(data$Correlación)] <- 0
+      
+      data <- data.frame(data)
+      
+      data <- dplyr::filter(.data = data, 
+                            Estación == input$Estación2,
+                            Producto == input$Producto2)
+      
+      print(paste0("Los datos tienen una correlación de ", round(data$Correlación, 5)))
+      
+    })
+    grafica7 <- reactive({
+      
+      data1 <- dplyr::select(.data = datos, Estación, Producto, Pesos, PrecioLitro) %>% 
+        dplyr::filter(Estación == input$Estación2, Producto == input$Producto2)
+      
+      m <- loess(Pesos ~ PrecioLitro, data = data1)
+      
+      predict <- predict(m, se = TRUE)
+      
+      ymin <- predict$fit - (1.96 * predict$se.fit)
+      ymax <- predict$fit + (1.96 * predict$se.fit)
+      
+      grafica <- plot_ly(data1, 
+                         x = ~PrecioLitro, 
+                         y = ~Pesos, 
+                         type = "scatter",
+                         mode = "markers") %>% 
+        add_lines(y = ~fitted(loess(Pesos ~ PrecioLitro)),
+                  line = list(color = '#e33575'),
+                  name = "Loess Smoother", 
+                  showlegend = FALSE) %>%
+        add_ribbons(data = augment(m),
+                    ymin = ymin,
+                    ymax = ymax,
+                    line = list(color = 'rgba(227, 53, 117, 0.05)'),
+                    fillcolor = 'rgba(227, 53, 117, 0.33)',
+                    showlegend = FALSE) %>% 
+        layout(title = "Relación entre Precio vs Ventas",
+               xaxis = list(title = "Precio por litro"), 
+               yaxis = list(title = "Ventas"),
+               plot_bgcolor = "#272c30",
+               paper_bgcolor = "#272c30")
+      
+      grafica
+      
+    })
+    grafica8 <- reactive({
+      
+      data2 <- dplyr::select(.data = datos, Estación, Producto, Fecha, Pesos, PrecioLitro) %>% 
+        dplyr::filter(Estación == input$Estación2, Producto == input$Producto2)
+      
+      
+      grafica <- plot_ly( data=data2, 
+                          x=~Fecha,  
+                          y = ~PrecioLitro,
+                          type = 'scatter', 
+                          mode = 'lines') %>%
+                  layout( title = "Variación del Precio",
+                          xaxis = list(title = "Fecha"), 
+                          yaxis = list(title = "Precio por Litro"),
+                          plot_bgcolor = "#272c30", 
+                          paper_bgcolor = "#272c30") 
+      
+      grafica
+      
+    })
+    
+
+    output$correlación <- renderText(datosCorrelación())
+    output$CorrelaciónPlot <- renderPlotly(grafica7())
+    output$Precio <- renderPlotly(grafica8())
+    
+    
   }
   
 #ShinyApp ----
@@ -1981,3 +2401,5 @@ library(shinymanager)
   shinyApp(ui = ui, server = server)
 
 
+
+  
