@@ -1,7 +1,7 @@
 install.packages('devtools')
 library(devtools)
 devtools::install_github('vqv/ggbiplot')
-isntall.packages('packrat')
+install.packages('packrat')
 
 install.packages('shiny')
 install.packages('shinydashboard')
