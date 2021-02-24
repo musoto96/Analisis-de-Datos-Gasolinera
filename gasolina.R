@@ -15,9 +15,9 @@ library(forecast)
 library(shinymanager)
 library(lubridate)
 
-#Contrase馻s ----
+#Contrase帽as ----
 
-  contrase馻s <- data.frame(
+  contrase帽as <- data.frame(
     user = c("SBR-Gasolina"),
     password = c("SBR333"),
     stringsAsFactors = FALSE)
@@ -28,7 +28,7 @@ library(lubridate)
 
 #Base de Datos ----
   
-  datos <- data.frame(readxl::read_excel("C:/Users/0303u/Google Drive/Trabajo/Trabajo SBR/Shell/Dashboard Gasolina Dinamico/DatosGasolina.xlsx", sheet = "DatosShell"))
+  datos <- data.frame(readxl::read_excel("DatosGasolina.xlsx", sheet = "DatosShell"))
   
   datos$Fecha <- as.Date(datos$Fecha)
   datos$Semana <- as.Date(datos$Semana)
@@ -40,8 +40,8 @@ library(lubridate)
                               Fecha >= "2020-01-01" & Fecha <= "2020-12-31")
   
   datosFijosA <- dplyr::select(.data = datosFijos, 
-                               Regi髇, Fecha, Producto, Margen, Pesos, Costo, Litros, Importe, PrecioLitro) %>% 
-    dplyr::filter(Regi髇=="A") %>%
+                               Regi贸n, Fecha, Producto, Margen, Pesos, Costo, Litros, Importe, PrecioLitro) %>% 
+    dplyr::filter(Regi贸n=="A") %>%
     dplyr::summarise(Utilidad = round(sum(Margen),0),
                      Ventas = round(sum(Pesos),0),
                      Costos = round(sum(Costo),0),
@@ -50,8 +50,8 @@ library(lubridate)
                      Precio = round(mean(PrecioLitro),2))
   
   datosFijosB <- dplyr::select(.data = datosFijos, 
-                               Regi髇, Fecha, Producto, Margen, Pesos, Costo, Litros, Importe, PrecioLitro) %>% 
-    dplyr::filter(Regi髇=="B") %>%
+                               Regi贸n, Fecha, Producto, Margen, Pesos, Costo, Litros, Importe, PrecioLitro) %>% 
+    dplyr::filter(Regi贸n=="B") %>%
     dplyr::summarise(Utilidad = round(sum(Margen),0),
                      Ventas = round(sum(Pesos),0),
                      Costos = round(sum(Costo),0),
@@ -60,8 +60,8 @@ library(lubridate)
                      Precio = round(mean(PrecioLitro),2))
   
   datosFijosC <- dplyr::select(.data = datosFijos, 
-                               Regi髇, Fecha, Producto, Margen, Pesos, Costo, Litros, Importe, PrecioLitro) %>% 
-    dplyr::filter(Regi髇=="C") %>%
+                               Regi贸n, Fecha, Producto, Margen, Pesos, Costo, Litros, Importe, PrecioLitro) %>% 
+    dplyr::filter(Regi贸n=="C") %>%
     dplyr::summarise(Utilidad = round(sum(Margen),0),
                      Ventas = round(sum(Pesos),0),
                      Costos = round(sum(Costo),0),
@@ -100,9 +100,9 @@ library(lubridate)
   sidebar <- dashboardSidebar({
     sidebarMenu(
       menuItem("Principal", tabName = "Principal", icon = icon("chart-line"),
-               menuSubItem("Regi髇 A", tabName = "Regi髇A", icon = shiny::icon("stream")),
-               menuSubItem("Regi髇 B", tabName = "Regi髇B", icon = shiny::icon("stream")),
-               menuSubItem("Regi髇 C", tabName = "Regi髇C", icon = shiny::icon("stream"))),
+               menuSubItem("Regi贸n A", tabName = "Regi贸nA", icon = shiny::icon("stream")),
+               menuSubItem("Regi贸n B", tabName = "Regi贸nB", icon = shiny::icon("stream")),
+               menuSubItem("Regi贸n C", tabName = "Regi贸nC", icon = shiny::icon("stream"))),
       menuItem("Avanzado", tabName = "Avanzado", icon = icon("laptop-code"),
                menuSubItem("PCA", tabName = "PCA", icon = shiny::icon("stream")),
                menuSubItem("Pronostico", tabName = "Pronostico", icon = shiny::icon("stream")),
@@ -131,7 +131,7 @@ library(lubridate)
   body <- dashboardBody({
     verbatimTextOutput("usuario")
     tabItems(
-      tabItem(tabName = "Regi髇A",
+      tabItem(tabName = "Regi贸nA",
               fluidRow(
                 gradientBox(
                   title = "Utilidad",
@@ -258,7 +258,7 @@ library(lubridate)
                 )
               )
       ),
-      tabItem(tabName = "Regi髇B",
+      tabItem(tabName = "Regi贸nB",
               fluidRow(
                 gradientBox(
                   title = "Utilidad",
@@ -385,7 +385,7 @@ library(lubridate)
                 )
               )
       ),
-      tabItem(tabName = "Regi髇C",
+      tabItem(tabName = "Regi贸nC",
               fluidRow(
                 gradientBox(
                   title = "Utilidad",
@@ -527,14 +527,14 @@ library(lubridate)
       tabItem(tabName = "Pronostico",
               fluidRow(
                 boxPlus(
-                  title = "Regi髇",
+                  title = "Regi贸n",
                   width = 2,
                   collapsible = TRUE,
                   closable = FALSE,
                   status = "primary",
                   footer_padding = FALSE,
                   tags$style("#select2 {background-color:blue;}"),
-                  selectInput(inputId = "Regi髇",
+                  selectInput(inputId = "Regi贸n",
                               label = "",
                               choices = c("A","B","C","Total"))),
                   boxPlus(
@@ -544,7 +544,7 @@ library(lubridate)
                     closable = FALSE,
                     status = "primary",
                     footer_padding = FALSE,
-                    uiOutput("Estaci髇")),
+                    uiOutput("Estaci贸n")),
                   boxPlus(
                     title = "Producto",
                     width = 2,
@@ -605,7 +605,7 @@ library(lubridate)
                   closable = FALSE,
                   status = "primary",
                   footer_padding = FALSE,
-                  uiOutput("Estaci髇2")),
+                  uiOutput("Estaci贸n2")),
                 boxPlus(
                   title = "Producto",
                   width = 4,
@@ -615,21 +615,21 @@ library(lubridate)
                   footer_padding = FALSE,
                   uiOutput("Producto2")),
                 boxPlus(
-                  title = "Correlaci髇",
+                  title = "Correlaci贸n",
                   width = 4,
                   collapsible = TRUE,
                   closable = FALSE,
                   status = "primary",
                   footer_padding = FALSE,
-                  textOutput("correlaci髇")),
+                  textOutput("correlaci贸n")),
                 boxPlus(
-                  title = "Correlaci髇",
+                  title = "Correlaci贸n",
                   width = 8,
                   collapsible = TRUE,
                   closable = FALSE,
                   status = "maroon",
                   footer_padding = FALSE,
-                  plotlyOutput("Correlaci髇Plot",
+                  plotlyOutput("Correlaci贸nPlot",
                                height = "350px")),
                 boxPlus(
                   title = "Precio",
@@ -641,13 +641,13 @@ library(lubridate)
                   plotlyOutput("Precio",
                                height = "200px")),
                 boxPlus(
-                  title = "Interpretaci髇",
+                  title = "Interpretaci贸n",
                   width = 4,
                   collapsible = TRUE,
                   closable = FALSE,
                   status = "maroon",
                   footer_padding = FALSE,
-                  textOutput("Interpretaci髇"))
+                  textOutput("Interpretaci贸n"))
               ))
     )
   })
@@ -665,7 +665,7 @@ library(lubridate)
     #usuario
     
     usuario <- secure_server(
-      check_credentials = check_credentials(contrase馻s))
+      check_credentials = check_credentials(contrase帽as))
     
     output$usuario <- renderPrint({
       reactiveValuesToList(usuario)})
@@ -700,7 +700,7 @@ library(lubridate)
         
         if(input$p == "Semanal"){
           
-          dato <- dplyr::group_by(.data = d(), Regi髇, Estaci髇, Producto, Semana) %>%
+          dato <- dplyr::group_by(.data = d(), Regi贸n, Estaci贸n, Producto, Semana) %>%
             dplyr::summarise(Importe = sum(Importe),
                              Litros = sum(Litros),
                              Pesos = sum(Pesos),
@@ -715,7 +715,7 @@ library(lubridate)
           
         }else{
           
-          dato <- dplyr::group_by(.data = d(), Regi髇, Estaci髇, Producto, Mes) %>%
+          dato <- dplyr::group_by(.data = d(), Regi贸n, Estaci贸n, Producto, Mes) %>%
             dplyr::summarise(Importe = sum(Importe),
                              Litros = sum(Litros),
                              Pesos = sum(Pesos),
@@ -735,12 +735,12 @@ library(lubridate)
 
     })
     
-    #KPI regi髇 A
+    #KPI regi贸n A
     
     dataUtilidadA <- reactive({
       
-      dataA <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Margen) %>% 
-        dplyr::filter(Regi髇=="A") %>%
+      dataA <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Margen) %>% 
+        dplyr::filter(Regi贸n=="A") %>%
         dplyr::group_by(Producto) %>% 
         dplyr::summarise(Utilidad = round(sum(Margen),0)) %>% 
         dplyr::ungroup() 
@@ -757,8 +757,8 @@ library(lubridate)
     
     dataVentasA <- reactive({
       
-      dataA <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Pesos) %>% 
-        dplyr::filter(Regi髇=="A") %>%
+      dataA <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Pesos) %>% 
+        dplyr::filter(Regi贸n=="A") %>%
         dplyr::group_by(Producto) %>% 
         dplyr::summarise(Ventas = round(sum(Pesos),0)) %>% 
         dplyr::ungroup()
@@ -775,8 +775,8 @@ library(lubridate)
     
     dataCostosA <- reactive({
       
-      dataA <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Costo) %>% 
-        dplyr::filter(Regi髇=="A") %>%
+      dataA <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Costo) %>% 
+        dplyr::filter(Regi贸n=="A") %>%
         dplyr::group_by(Producto) %>% 
         dplyr::summarise(Costos = round(sum(Costo),0)) %>% 
         dplyr::ungroup()
@@ -793,8 +793,8 @@ library(lubridate)
     
     dataLitrosA <- reactive({
       
-      dataA <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Litros) %>% 
-        dplyr::filter(Regi髇=="A") %>%
+      dataA <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Litros) %>% 
+        dplyr::filter(Regi贸n=="A") %>%
         dplyr::group_by(Producto) %>% 
         dplyr::summarise(Litros = round(sum(Litros),0)) %>% 
         dplyr::ungroup()
@@ -811,8 +811,8 @@ library(lubridate)
     
     dataDespachosA <- reactive({
       
-      dataA <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Importe) %>% 
-        dplyr::filter(Regi髇=="A") %>%
+      dataA <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Importe) %>% 
+        dplyr::filter(Regi贸n=="A") %>%
         dplyr::group_by(Producto) %>% 
         dplyr::summarise(Despachos = round(sum(Importe),0)) %>% 
         dplyr::ungroup()
@@ -829,8 +829,8 @@ library(lubridate)
     
     dataPrecioLitroA <- reactive({
       
-      dataA <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, PrecioLitro) %>% 
-        dplyr::filter(Regi髇=="A") %>%
+      dataA <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, PrecioLitro) %>% 
+        dplyr::filter(Regi贸n=="A") %>%
         dplyr::group_by(Producto) %>% 
         dplyr::summarise(PrecioLitro = round(mean(PrecioLitro),2)) %>% 
         dplyr::ungroup()
@@ -845,12 +845,12 @@ library(lubridate)
       
     }) 
     
-    #KPI regi髇 B
+    #KPI regi贸n B
     
     dataUtilidadB <- reactive({
       
-      dataB <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Margen) %>% 
-        dplyr::filter(Regi髇=="B") %>%
+      dataB <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Margen) %>% 
+        dplyr::filter(Regi贸n=="B") %>%
         dplyr::group_by(Producto) %>% 
         dplyr::summarise(Utilidad = round(sum(Margen),0)) %>% 
         dplyr::ungroup()
@@ -867,8 +867,8 @@ library(lubridate)
     
     dataVentasB <- reactive({
       
-      dataB <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Pesos) %>% 
-        dplyr::filter(Regi髇=="B") %>%
+      dataB <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Pesos) %>% 
+        dplyr::filter(Regi贸n=="B") %>%
         dplyr::group_by(Producto) %>% 
         dplyr::summarise(Ventas = round(sum(Pesos),0)) %>% 
         dplyr::ungroup()
@@ -885,8 +885,8 @@ library(lubridate)
     
     dataCostosB <- reactive({
       
-      dataB <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Costo) %>% 
-        dplyr::filter(Regi髇=="B") %>%
+      dataB <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Costo) %>% 
+        dplyr::filter(Regi贸n=="B") %>%
         dplyr::group_by(Producto) %>% 
         dplyr::summarise(Costos = round(sum(Costo),0)) %>% 
         dplyr::ungroup()
@@ -903,8 +903,8 @@ library(lubridate)
     
     dataLitrosB <- reactive({
       
-      dataB <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Litros) %>% 
-        dplyr::filter(Regi髇=="B") %>%
+      dataB <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Litros) %>% 
+        dplyr::filter(Regi贸n=="B") %>%
         dplyr::group_by(Producto) %>% 
         dplyr::summarise(Litros = round(sum(Litros),0)) %>% 
         dplyr::ungroup()
@@ -921,8 +921,8 @@ library(lubridate)
     
     dataDespachosB <- reactive({
       
-      dataB <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Importe) %>% 
-        dplyr::filter(Regi髇=="B") %>%
+      dataB <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Importe) %>% 
+        dplyr::filter(Regi贸n=="B") %>%
         dplyr::group_by(Producto) %>% 
         dplyr::summarise(Despachos = round(sum(Importe),0)) %>% 
         dplyr::ungroup()
@@ -939,8 +939,8 @@ library(lubridate)
     
     dataPrecioLitroB <- reactive({
       
-      dataB <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, PrecioLitro) %>% 
-        dplyr::filter(Regi髇=="B") %>%
+      dataB <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, PrecioLitro) %>% 
+        dplyr::filter(Regi贸n=="B") %>%
         dplyr::group_by(Producto) %>% 
         dplyr::summarise(PrecioLitro = round(mean(PrecioLitro),2)) %>% 
         dplyr::ungroup()
@@ -955,12 +955,12 @@ library(lubridate)
       
     }) 
     
-    #KPI regi髇 C
+    #KPI regi贸n C
     
     dataUtilidadC <- reactive({
       
-      dataC <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Margen) %>% 
-        dplyr::filter(Regi髇=="C") %>%
+      dataC <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Margen) %>% 
+        dplyr::filter(Regi贸n=="C") %>%
         dplyr::group_by(Producto) %>% 
         dplyr::summarise(Utilidad = round(sum(Margen),0)) %>% 
         dplyr::ungroup()
@@ -977,8 +977,8 @@ library(lubridate)
     
     dataVentasC <- reactive({
       
-      dataC <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Pesos) %>% 
-        dplyr::filter(Regi髇=="C") %>%
+      dataC <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Pesos) %>% 
+        dplyr::filter(Regi贸n=="C") %>%
         dplyr::group_by(Producto) %>% 
         dplyr::summarise(Ventas = round(sum(Pesos),0)) %>% 
         dplyr::ungroup()
@@ -995,8 +995,8 @@ library(lubridate)
     
     dataCostosC <- reactive({
       
-      dataC <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Costo) %>% 
-        dplyr::filter(Regi髇=="C") %>%
+      dataC <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Costo) %>% 
+        dplyr::filter(Regi贸n=="C") %>%
         dplyr::group_by(Producto) %>% 
         dplyr::summarise(Costos = round(sum(Costo),0)) %>% 
         dplyr::ungroup()
@@ -1013,8 +1013,8 @@ library(lubridate)
     
     dataLitrosC <- reactive({
       
-      dataC <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Litros) %>% 
-        dplyr::filter(Regi髇=="C") %>%
+      dataC <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Litros) %>% 
+        dplyr::filter(Regi贸n=="C") %>%
         dplyr::group_by(Producto) %>% 
         dplyr::summarise(Litros = round(sum(Litros),0)) %>% 
         dplyr::ungroup()
@@ -1031,8 +1031,8 @@ library(lubridate)
     
     dataDespachosC <- reactive({
       
-      dataC <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Importe) %>% 
-        dplyr::filter(Regi髇=="C") %>%
+      dataC <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Importe) %>% 
+        dplyr::filter(Regi贸n=="C") %>%
         dplyr::group_by(Producto) %>% 
         dplyr::summarise(Despachos = round(sum(Importe),0)) %>% 
         dplyr::ungroup()
@@ -1049,8 +1049,8 @@ library(lubridate)
     
     dataPrecioLitroC <- reactive({
       
-      dataC <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, PrecioLitro) %>% 
-        dplyr::filter(Regi髇=="C") %>%
+      dataC <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, PrecioLitro) %>% 
+        dplyr::filter(Regi贸n=="C") %>%
         dplyr::group_by(Producto) %>% 
         dplyr::summarise(PrecioLitro = round(mean(PrecioLitro),2)) %>% 
         dplyr::ungroup()
@@ -1069,8 +1069,8 @@ library(lubridate)
     
     grafica1 <- reactive({
       
-      datosGrafica <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Margen ) %>% 
-        dplyr::filter(Regi髇 == "A") %>% 
+      datosGrafica <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Margen ) %>% 
+        dplyr::filter(Regi贸n == "A") %>% 
         dplyr::group_by(Producto, Fecha) %>% 
         dplyr::summarise(Utilidad = sum(Margen))
       
@@ -1085,8 +1085,8 @@ library(lubridate)
     
     grafica2 <- reactive({
       
-      datosGrafica <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Margen ) %>% 
-        dplyr::filter(Regi髇 == "B") %>% 
+      datosGrafica <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Margen ) %>% 
+        dplyr::filter(Regi贸n == "B") %>% 
         dplyr::group_by(Producto, Fecha) %>% 
         dplyr::summarise(Utilidad = sum(Margen))
       
@@ -1101,8 +1101,8 @@ library(lubridate)
     
     grafica3 <- reactive({
       
-      datosGrafica <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Margen ) %>% 
-        dplyr::filter(Regi髇 == "C") %>% 
+      datosGrafica <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Margen ) %>% 
+        dplyr::filter(Regi贸n == "C") %>% 
         dplyr::group_by(Producto, Fecha) %>% 
         dplyr::summarise(Utilidad = sum(Margen))
       
@@ -1119,9 +1119,9 @@ library(lubridate)
     
     grafica4 <- reactive({
       
-      dataA <- dplyr::select(.data = data(), Regi髇, Estaci髇, Fecha, Producto, Pesos, Margen) %>% 
-        dplyr::filter(Regi髇=="A") %>%
-        dplyr::group_by(Producto, Estaci髇) %>% 
+      dataA <- dplyr::select(.data = data(), Regi贸n, Estaci贸n, Fecha, Producto, Pesos, Margen) %>% 
+        dplyr::filter(Regi贸n=="A") %>%
+        dplyr::group_by(Producto, Estaci贸n) %>% 
         dplyr::summarise(Ventas = round(sum(Pesos),0),
                          Utilidad = round(sum(Margen),0)) %>% 
         dplyr::arrange(Producto)
@@ -1129,7 +1129,7 @@ library(lubridate)
       conteo <- dplyr::select(.data = dataA, Producto) %>% 
         dplyr::count()
       
-      totales <- dplyr::select(.data = dataA, Producto, Estaci髇, Ventas, Utilidad) %>% 
+      totales <- dplyr::select(.data = dataA, Producto, Estaci贸n, Ventas, Utilidad) %>% 
         dplyr::group_by(Producto) %>% 
         dplyr::summarise(TotalVentas = sum(Ventas),
                          TotalUtlidad = sum(Utilidad))
@@ -1196,16 +1196,16 @@ library(lubridate)
     
     grafica5 <- reactive({
       
-      dataA <- dplyr::select(.data = data(), Regi髇, Estaci髇, Fecha, Producto, Pesos) %>% 
-        dplyr::filter(Regi髇=="B") %>%
-        dplyr::group_by(Producto, Estaci髇) %>% 
+      dataA <- dplyr::select(.data = data(), Regi贸n, Estaci贸n, Fecha, Producto, Pesos) %>% 
+        dplyr::filter(Regi贸n=="B") %>%
+        dplyr::group_by(Producto, Estaci贸n) %>% 
         dplyr::summarise(Ventas = round(sum(Pesos),0)) %>% 
         dplyr::arrange(Producto)
       
       conteo <- dplyr::select(.data = dataA, Producto) %>% 
         dplyr::count()
       
-      totales <- dplyr::select(.data = dataA, Producto, Estaci髇, Ventas) %>% 
+      totales <- dplyr::select(.data = dataA, Producto, Estaci贸n, Ventas) %>% 
         dplyr::group_by(Producto) %>% 
         dplyr::summarise(Total = sum(Ventas))
       
@@ -1270,9 +1270,9 @@ library(lubridate)
     
     grafica6 <- reactive({
       
-      dataA <- dplyr::select(.data = datos, Regi髇, Estaci髇, Fecha, Producto, Pesos, Margen) %>% 
-        dplyr::filter(Regi髇=="C") %>%
-        dplyr::group_by(Producto, Estaci髇) %>% 
+      dataA <- dplyr::select(.data = datos, Regi贸n, Estaci贸n, Fecha, Producto, Pesos, Margen) %>% 
+        dplyr::filter(Regi贸n=="C") %>%
+        dplyr::group_by(Producto, Estaci贸n) %>% 
         dplyr::summarise(Ventas = round(sum(Pesos),0),
                          Utilidad = round(sum(Margen),0)) %>% 
         dplyr::arrange(Producto)
@@ -1280,7 +1280,7 @@ library(lubridate)
       conteo <- dplyr::select(.data = dataA, Producto) %>% 
         dplyr::count()
       
-      totales <- dplyr::select(.data = dataA, Producto, Estaci髇, Ventas, Utilidad) %>% 
+      totales <- dplyr::select(.data = dataA, Producto, Estaci贸n, Ventas, Utilidad) %>% 
         dplyr::group_by(Producto) %>% 
         dplyr::summarise(TotalVentas = sum(Ventas),
                          TotalUtilidad = sum(Utilidad))
@@ -1344,14 +1344,14 @@ library(lubridate)
       
     })
     
-    #Regi髇 A: Sucursales
+    #Regi贸n A: Sucursales
     
     dataSucursalAAd <- reactive({
       
-      dataA <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Estaci髇, Pesos, Margen) %>% 
-        dplyr::filter(Regi髇=="A") %>%
+      dataA <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Estaci贸n, Pesos, Margen) %>% 
+        dplyr::filter(Regi贸n=="A") %>%
         dplyr::filter(Producto=="Diesel") %>%
-        dplyr::group_by(Estaci髇) %>% 
+        dplyr::group_by(Estaci贸n) %>% 
         dplyr::summarise(Ventas = round(sum(Pesos),0),
                          Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
@@ -1368,10 +1368,10 @@ library(lubridate)
     
     dataSucursalAAs <- reactive({
       
-      dataA <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Estaci髇, Pesos, Margen) %>% 
-        dplyr::filter(Regi髇=="A") %>%
+      dataA <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Estaci贸n, Pesos, Margen) %>% 
+        dplyr::filter(Regi贸n=="A") %>%
         dplyr::filter(Producto=="Super") %>%
-        dplyr::group_by(Estaci髇) %>% 
+        dplyr::group_by(Estaci贸n) %>% 
         dplyr::summarise(Ventas = round(sum(Pesos),0),
                          Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
@@ -1388,10 +1388,10 @@ library(lubridate)
     
     dataSucursalAAv <- reactive({
       
-      dataA <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Estaci髇, Pesos, Margen) %>% 
-        dplyr::filter(Regi髇=="A") %>%
+      dataA <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Estaci贸n, Pesos, Margen) %>% 
+        dplyr::filter(Regi贸n=="A") %>%
         dplyr::filter(Producto=="VPower") %>%
-        dplyr::group_by(Estaci髇) %>% 
+        dplyr::group_by(Estaci贸n) %>% 
         dplyr::summarise(Ventas = round(sum(Pesos),0),
                          Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
@@ -1408,10 +1408,10 @@ library(lubridate)
     
     dataSucursalABd <- reactive({
       
-      dataA <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Estaci髇, Pesos, Margen) %>% 
-        dplyr::filter(Regi髇=="A") %>%
+      dataA <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Estaci贸n, Pesos, Margen) %>% 
+        dplyr::filter(Regi贸n=="A") %>%
         dplyr::filter(Producto=="Diesel") %>%
-        dplyr::group_by(Estaci髇) %>% 
+        dplyr::group_by(Estaci贸n) %>% 
         dplyr::summarise(Ventas = round(sum(Pesos),0),
                          Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
@@ -1428,10 +1428,10 @@ library(lubridate)
     
     dataSucursalABs <- reactive({
       
-      dataA <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Estaci髇, Pesos, Margen) %>% 
-        dplyr::filter(Regi髇=="A") %>%
+      dataA <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Estaci贸n, Pesos, Margen) %>% 
+        dplyr::filter(Regi贸n=="A") %>%
         dplyr::filter(Producto=="Super") %>%
-        dplyr::group_by(Estaci髇) %>% 
+        dplyr::group_by(Estaci贸n) %>% 
         dplyr::summarise(Ventas = round(sum(Pesos),0),
                          Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
@@ -1448,10 +1448,10 @@ library(lubridate)
     
     dataSucursalABv <- reactive({
       
-      dataA <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Estaci髇, Pesos, Margen) %>% 
-        dplyr::filter(Regi髇=="A") %>%
+      dataA <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Estaci贸n, Pesos, Margen) %>% 
+        dplyr::filter(Regi贸n=="A") %>%
         dplyr::filter(Producto=="VPower") %>%
-        dplyr::group_by(Estaci髇) %>% 
+        dplyr::group_by(Estaci贸n) %>% 
         dplyr::summarise(Ventas = round(sum(Pesos),0),
                          Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
@@ -1466,14 +1466,14 @@ library(lubridate)
       
     })
     
-    #Regi髇 B: Sucursales
+    #Regi贸n B: Sucursales
     
     dataSucursalBAd <- reactive({
       
-      dataA <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Estaci髇, Pesos, Margen) %>% 
-        dplyr::filter(Regi髇=="B") %>%
+      dataA <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Estaci贸n, Pesos, Margen) %>% 
+        dplyr::filter(Regi贸n=="B") %>%
         dplyr::filter(Producto=="Diesel") %>%
-        dplyr::group_by(Estaci髇) %>% 
+        dplyr::group_by(Estaci贸n) %>% 
         dplyr::summarise(Ventas = round(sum(Pesos),0),
                          Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
@@ -1490,10 +1490,10 @@ library(lubridate)
     
     dataSucursalBAs <- reactive({
       
-      dataA <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Estaci髇, Pesos, Margen) %>% 
-        dplyr::filter(Regi髇=="B") %>%
+      dataA <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Estaci贸n, Pesos, Margen) %>% 
+        dplyr::filter(Regi贸n=="B") %>%
         dplyr::filter(Producto=="Super") %>%
-        dplyr::group_by(Estaci髇) %>% 
+        dplyr::group_by(Estaci贸n) %>% 
         dplyr::summarise(Ventas = round(sum(Pesos),0),
                          Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
@@ -1510,10 +1510,10 @@ library(lubridate)
     
     dataSucursalBAv <- reactive({
       
-      dataA <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Estaci髇, Pesos, Margen) %>% 
-        dplyr::filter(Regi髇=="B") %>%
+      dataA <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Estaci贸n, Pesos, Margen) %>% 
+        dplyr::filter(Regi贸n=="B") %>%
         dplyr::filter(Producto=="VPower") %>%
-        dplyr::group_by(Estaci髇) %>% 
+        dplyr::group_by(Estaci贸n) %>% 
         dplyr::summarise(Ventas = round(sum(Pesos),0),
                          Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
@@ -1530,10 +1530,10 @@ library(lubridate)
     
     dataSucursalBBd <- reactive({
       
-      dataA <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Estaci髇, Pesos, Margen) %>% 
-        dplyr::filter(Regi髇=="B") %>%
+      dataA <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Estaci贸n, Pesos, Margen) %>% 
+        dplyr::filter(Regi贸n=="B") %>%
         dplyr::filter(Producto=="Diesel") %>%
-        dplyr::group_by(Estaci髇) %>% 
+        dplyr::group_by(Estaci贸n) %>% 
         dplyr::summarise(Ventas = round(sum(Pesos),0),
                          Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
@@ -1550,10 +1550,10 @@ library(lubridate)
     
     dataSucursalBBs <- reactive({
       
-      dataA <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Estaci髇, Pesos, Margen) %>% 
-        dplyr::filter(Regi髇=="B") %>%
+      dataA <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Estaci贸n, Pesos, Margen) %>% 
+        dplyr::filter(Regi贸n=="B") %>%
         dplyr::filter(Producto=="Super") %>%
-        dplyr::group_by(Estaci髇) %>% 
+        dplyr::group_by(Estaci贸n) %>% 
         dplyr::summarise(Ventas = round(sum(Pesos),0),
                          Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
@@ -1570,10 +1570,10 @@ library(lubridate)
     
     dataSucursalBBv <- reactive({
       
-      dataA <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Estaci髇, Pesos, Margen) %>% 
-        dplyr::filter(Regi髇=="B") %>%
+      dataA <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Estaci贸n, Pesos, Margen) %>% 
+        dplyr::filter(Regi贸n=="B") %>%
         dplyr::filter(Producto=="VPower") %>%
-        dplyr::group_by(Estaci髇) %>% 
+        dplyr::group_by(Estaci贸n) %>% 
         dplyr::summarise(Ventas = round(sum(Pesos),0),
                          Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
@@ -1588,14 +1588,14 @@ library(lubridate)
       
     })
     
-    #Regi髇 C: Sucursales
+    #Regi贸n C: Sucursales
     
     dataSucursalCAd <- reactive({
       
-      dataA <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Estaci髇, Pesos, Margen) %>% 
-        dplyr::filter(Regi髇=="C") %>%
+      dataA <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Estaci贸n, Pesos, Margen) %>% 
+        dplyr::filter(Regi贸n=="C") %>%
         dplyr::filter(Producto=="Diesel") %>%
-        dplyr::group_by(Estaci髇) %>% 
+        dplyr::group_by(Estaci贸n) %>% 
         dplyr::summarise(Ventas = round(sum(Pesos),0),
                          Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
@@ -1612,10 +1612,10 @@ library(lubridate)
     
     dataSucursalCAs <- reactive({
       
-      dataA <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Estaci髇, Pesos, Margen) %>% 
-        dplyr::filter(Regi髇=="C") %>%
+      dataA <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Estaci贸n, Pesos, Margen) %>% 
+        dplyr::filter(Regi贸n=="C") %>%
         dplyr::filter(Producto=="Super") %>%
-        dplyr::group_by(Estaci髇) %>% 
+        dplyr::group_by(Estaci贸n) %>% 
         dplyr::summarise(Ventas = round(sum(Pesos),0),
                          Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
@@ -1632,10 +1632,10 @@ library(lubridate)
     
     dataSucursalCAv <- reactive({
       
-      dataA <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Estaci髇, Pesos, Margen) %>% 
-        dplyr::filter(Regi髇=="C") %>%
+      dataA <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Estaci贸n, Pesos, Margen) %>% 
+        dplyr::filter(Regi贸n=="C") %>%
         dplyr::filter(Producto=="VPower") %>%
-        dplyr::group_by(Estaci髇) %>% 
+        dplyr::group_by(Estaci贸n) %>% 
         dplyr::summarise(Ventas = round(sum(Pesos),0),
                          Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
@@ -1652,10 +1652,10 @@ library(lubridate)
     
     dataSucursalCBd <- reactive({
       
-      dataA <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Estaci髇, Pesos, Margen) %>% 
-        dplyr::filter(Regi髇=="C") %>%
+      dataA <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Estaci贸n, Pesos, Margen) %>% 
+        dplyr::filter(Regi贸n=="C") %>%
         dplyr::filter(Producto=="Diesel") %>%
-        dplyr::group_by(Estaci髇) %>% 
+        dplyr::group_by(Estaci贸n) %>% 
         dplyr::summarise(Ventas = round(sum(Pesos),0),
                          Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
@@ -1672,10 +1672,10 @@ library(lubridate)
     
     dataSucursalCBs <- reactive({
       
-      dataA <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Estaci髇, Pesos, Margen) %>% 
-        dplyr::filter(Regi髇=="C") %>%
+      dataA <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Estaci贸n, Pesos, Margen) %>% 
+        dplyr::filter(Regi贸n=="C") %>%
         dplyr::filter(Producto=="Super") %>%
-        dplyr::group_by(Estaci髇) %>% 
+        dplyr::group_by(Estaci贸n) %>% 
         dplyr::summarise(Ventas = round(sum(Pesos),0),
                          Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
@@ -1692,10 +1692,10 @@ library(lubridate)
     
     dataSucursalCBv <- reactive({
       
-      dataA <- dplyr::select(.data = data(), Regi髇, Fecha, Producto, Estaci髇, Pesos, Margen) %>% 
-        dplyr::filter(Regi髇=="C") %>%
+      dataA <- dplyr::select(.data = data(), Regi贸n, Fecha, Producto, Estaci贸n, Pesos, Margen) %>% 
+        dplyr::filter(Regi贸n=="C") %>%
         dplyr::filter(Producto=="VPower") %>%
-        dplyr::group_by(Estaci髇) %>% 
+        dplyr::group_by(Estaci贸n) %>% 
         dplyr::summarise(Ventas = round(sum(Pesos),0),
                          Utilidad = round(sum(Margen),0),
                          Ganancia = paste0(round((sum(Margen)/sum(Pesos))*100,2),"%"))%>% 
@@ -1714,15 +1714,15 @@ library(lubridate)
     
     PCA <- reactive({
       
-      dataA <- dplyr::select(.data = datos, Regi髇, Fecha, Producto, Estaci髇, Pesos) %>% 
-        dplyr::group_by(Estaci髇, Regi髇, Producto) %>% 
+      dataA <- dplyr::select(.data = datos, Regi贸n, Fecha, Producto, Estaci贸n, Pesos) %>% 
+        dplyr::group_by(Estaci贸n, Regi贸n, Producto) %>% 
         dplyr::summarise(Pesos = sum(Pesos))
       
       dataA <- tidyr::spread(data = dataA, Producto, Pesos, fill=0)
       
       dataA <- data.frame(dataA)
       
-      rownames(dataA) <- dataA$Estaci髇
+      rownames(dataA) <- dataA$Estaci贸n
       
       dataA <- data.frame(dataA)
       
@@ -1734,12 +1734,12 @@ library(lubridate)
       
       grafica <- ggbiplot::ggbiplot(pcobj = PCA) +
         geom_point(size = 2 ,
-                   aes(color = dataA$Regi髇,
-                       text = paste("Sucursal:" , dataA$Estaci髇,
+                   aes(color = dataA$Regi贸n,
+                       text = paste("Sucursal:" , dataA$Estaci贸n,
                                     '</br> Diesel:' ,dataA$Diesel,
                                     '</br> Super:', dataA$Super,
                                     '</br> VPower:', dataA$VPower)))+
-        guides(color = guide_legend(title = "Regi髇"))+
+        guides(color = guide_legend(title = "Regi贸n"))+
         ggthemes::theme_fivethirtyeight(base_size = 15) +
         ggplot2::geom_vline(xintercept = 0, colour= "white", linetype = "dotted") +
         ggplot2::geom_hline(yintercept = 0, colour= "white", linetype = "dotted") +
@@ -1814,28 +1814,28 @@ library(lubridate)
     output$SucursalCBs <- renderTable(dataSucursalCBs(), colnames = TRUE, align = "l",spacing = "xs", digits = 0)
     output$SucursalCBv <- renderTable(dataSucursalCBv(), colnames = TRUE, align = "l",spacing = "xs", digits = 0)
     output$PCA <- renderPlotly(PCA())
-    output$Estaci髇2 <- renderUI(selectInput(inputId = "Estaci髇2", 
+    output$Estaci贸n2 <- renderUI(selectInput(inputId = "Estaci贸n2", 
                                             label = "", 
                                             choices = data.frame(dplyr::distinct(.data = data(), 
-                                                                                 Estaci髇))))
+                                                                                 Estaci贸n))))
     output$Producto2 <- renderUI(selectInput(inputId = "Producto2", 
                                              label = "", 
-                                             choices = data.frame(dplyr::filter(data(), Estaci髇 == input$Estaci髇2) %>% 
+                                             choices = data.frame(dplyr::filter(data(), Estaci贸n == input$Estaci贸n2) %>% 
                                                                   dplyr::distinct(Producto))))
-    output$Estaci髇 <- renderUI(selectInput(inputId = "Estaci髇", 
+    output$Estaci贸n <- renderUI(selectInput(inputId = "Estaci贸n", 
                                            label = "", 
-                                           choices = if(input$Regi髇 == "Total"){
+                                           choices = if(input$Regi贸n == "Total"){
                                                         c("Total")
                                                      }else{
-                                                      data.frame(rbind("Total", dplyr::filter(data(), Regi髇 == input$Regi髇) %>% 
-                                                                                dplyr::distinct(Estaci髇)))   
+                                                      data.frame(rbind("Total", dplyr::filter(data(), Regi贸n == input$Regi贸n) %>% 
+                                                                                dplyr::distinct(Estaci贸n)))   
                                                                }))
     output$Producto <- renderUI(selectInput(inputId = "Producto", 
                                             label = "", 
-                                            choices = if(input$Estaci髇 =="Total"){
+                                            choices = if(input$Estaci贸n =="Total"){
                                                          data.frame(rbind("Total", dplyr::distinct(data(), Producto)))
                                             }else{
-                                              data.frame(rbind("Total", dplyr::filter(data(), Estaci髇 == input$Estaci髇) %>% 
+                                              data.frame(rbind("Total", dplyr::filter(data(), Estaci贸n == input$Estaci贸n) %>% 
                                                                         dplyr::distinct(Producto)))
                                             }))
     
@@ -1849,7 +1849,7 @@ library(lubridate)
         
         if(input$p == "Semanal"){
           
-          dato <- dplyr::group_by(.data = datos, Regi髇, Estaci髇, Producto, Semana) %>%
+          dato <- dplyr::group_by(.data = datos, Regi贸n, Estaci贸n, Producto, Semana) %>%
             dplyr::summarise(Importe = sum(Importe),
                              Litros = sum(Litros),
                              Pesos = sum(Pesos),
@@ -1864,7 +1864,7 @@ library(lubridate)
           
         }else{
           
-          dato <- dplyr::group_by(.data = datos, Regi髇, Estaci髇, Producto, Mes) %>%
+          dato <- dplyr::group_by(.data = datos, Regi贸n, Estaci贸n, Producto, Mes) %>%
             dplyr::summarise(Importe = sum(Importe),
                              Litros = sum(Litros),
                              Pesos = sum(Pesos),
@@ -1885,34 +1885,34 @@ library(lubridate)
     }) 
     DatosArima <- reactive({
       
-      if(input$Regi髇 == "Total"){
+      if(input$Regi贸n == "Total"){
         if(input$Producto == "Total"){
           
-          datosModelo <- dplyr::select(.data = dataArima(), Regi髇, Estaci髇, Producto, Fecha, Pesos) %>% 
+          datosModelo <- dplyr::select(.data = dataArima(), Regi贸n, Estaci贸n, Producto, Fecha, Pesos) %>% 
             dplyr::group_by(Fecha) %>% 
             dplyr::summarise(Ventas = sum(Pesos))
           
         }else{
           
-          datosModelo <- dplyr::select(.data = dataArima(), Regi髇, Estaci髇, Producto, Fecha, Pesos)%>% 
+          datosModelo <- dplyr::select(.data = dataArima(), Regi贸n, Estaci贸n, Producto, Fecha, Pesos)%>% 
             dplyr::filter(Producto == input$Producto) %>% 
             dplyr::group_by(Fecha) %>% 
             dplyr::summarise(Ventas = sum(Pesos))
         }
       }else{
         
-        if(input$Estaci髇 == "Total"){
+        if(input$Estaci贸n == "Total"){
           if(input$Producto == "Total"){
             
-            datosModelo <- dplyr::select(.data = dataArima(), Regi髇, Estaci髇, Producto, Fecha, Pesos) %>% 
-              dplyr::filter(Regi髇 == input$Regi髇) %>% 
+            datosModelo <- dplyr::select(.data = dataArima(), Regi贸n, Estaci贸n, Producto, Fecha, Pesos) %>% 
+              dplyr::filter(Regi贸n == input$Regi贸n) %>% 
               dplyr::group_by(Fecha) %>% 
               dplyr::summarise(Ventas = sum(Pesos))
             
           }else{
             
-            datosModelo <- dplyr::select(.data = dataArima(), Regi髇, Estaci髇, Producto, Fecha, Pesos) %>% 
-              dplyr::filter(Regi髇 == input$Regi髇, Producto == input$Producto) %>% 
+            datosModelo <- dplyr::select(.data = dataArima(), Regi贸n, Estaci贸n, Producto, Fecha, Pesos) %>% 
+              dplyr::filter(Regi贸n == input$Regi贸n, Producto == input$Producto) %>% 
               dplyr::group_by(Fecha) %>% 
               dplyr::summarise(Ventas = sum(Pesos))
           }
@@ -1920,15 +1920,15 @@ library(lubridate)
           
           if(input$Producto == "Total"){
             
-            datosModelo <- dplyr::select(.data = dataArima(), Regi髇, Estaci髇, Producto, Fecha, Pesos) %>% 
-              dplyr::filter(Regi髇 == input$Regi髇, Estaci髇 == input$Estaci髇) %>% 
+            datosModelo <- dplyr::select(.data = dataArima(), Regi贸n, Estaci贸n, Producto, Fecha, Pesos) %>% 
+              dplyr::filter(Regi贸n == input$Regi贸n, Estaci贸n == input$Estaci贸n) %>% 
               dplyr::group_by(Fecha) %>% 
               dplyr::summarise(Ventas = sum(Pesos))
             
           }else{
             
-            datosModelo <- dplyr::select(.data = dataArima(), Regi髇, Estaci髇, Producto, Fecha, Pesos) %>%
-              dplyr::filter(Regi髇 == input$Regi髇, Estaci髇 == input$Estaci髇, Producto == input$Producto) %>% 
+            datosModelo <- dplyr::select(.data = dataArima(), Regi贸n, Estaci贸n, Producto, Fecha, Pesos) %>%
+              dplyr::filter(Regi贸n == input$Regi贸n, Estaci贸n == input$Estaci贸n, Producto == input$Producto) %>% 
               dplyr::group_by(Fecha) %>% 
               dplyr::summarise(Ventas = sum(Pesos))
             
@@ -1965,34 +1965,34 @@ library(lubridate)
     })
     DatosArimaP <- reactive({
       
-      if(input$Regi髇 == "Total"){
+      if(input$Regi贸n == "Total"){
         if(input$Producto == "Total"){
           
-          datosModelo <- dplyr::select(.data = dataArima(), Regi髇, Estaci髇, Producto, Fecha, Pesos) %>% 
+          datosModelo <- dplyr::select(.data = dataArima(), Regi贸n, Estaci贸n, Producto, Fecha, Pesos) %>% 
             dplyr::group_by(Fecha) %>% 
             dplyr::summarise(Ventas = sum(Pesos))
           
         }else{
           
-          datosModelo <- dplyr::select(.data = dataArima(), Regi髇, Estaci髇, Producto, Fecha, Pesos)%>% 
+          datosModelo <- dplyr::select(.data = dataArima(), Regi贸n, Estaci贸n, Producto, Fecha, Pesos)%>% 
             dplyr::filter(Producto == input$Producto) %>% 
             dplyr::group_by(Fecha) %>% 
             dplyr::summarise(Ventas = sum(Pesos))
         }
       }else{
         
-        if(input$Estaci髇 == "Total"){
+        if(input$Estaci贸n == "Total"){
           if(input$Producto == "Total"){
             
-            datosModelo <- dplyr::select(.data = dataArima(), Regi髇, Estaci髇, Producto, Fecha, Pesos) %>% 
-              dplyr::filter(Regi髇 == input$Regi髇) %>% 
+            datosModelo <- dplyr::select(.data = dataArima(), Regi贸n, Estaci贸n, Producto, Fecha, Pesos) %>% 
+              dplyr::filter(Regi贸n == input$Regi贸n) %>% 
               dplyr::group_by(Fecha) %>% 
               dplyr::summarise(Ventas = sum(Pesos))
             
           }else{
             
-            datosModelo <- dplyr::select(.data = dataArima(), Regi髇, Estaci髇, Producto, Fecha, Pesos) %>% 
-              dplyr::filter(Regi髇 == input$Regi髇, Producto == input$Producto) %>% 
+            datosModelo <- dplyr::select(.data = dataArima(), Regi贸n, Estaci贸n, Producto, Fecha, Pesos) %>% 
+              dplyr::filter(Regi贸n == input$Regi贸n, Producto == input$Producto) %>% 
               dplyr::group_by(Fecha) %>% 
               dplyr::summarise(Ventas = sum(Pesos))
           }
@@ -2000,14 +2000,14 @@ library(lubridate)
           
           if(input$Producto == "Total"){
             
-            datosModelo <- dplyr::select(.data = dataArima(), Regi髇, Estaci髇, Producto, Fecha, Pesos) %>% 
-              dplyr::filter(Regi髇 == input$Regi髇, Estaci髇 == input$Estaci髇) %>% 
+            datosModelo <- dplyr::select(.data = dataArima(), Regi贸n, Estaci贸n, Producto, Fecha, Pesos) %>% 
+              dplyr::filter(Regi贸n == input$Regi贸n, Estaci贸n == input$Estaci贸n) %>% 
               dplyr::group_by(Fecha) %>% 
               dplyr::summarise(Ventas = sum(Pesos))
           }else{
             
-            datosModelo <- dplyr::select(.data = dataArima(), Regi髇, Estaci髇, Producto, Fecha, Pesos) %>%
-              dplyr::filter(Regi髇 == input$Regi髇, Estaci髇 == input$Estaci髇, Producto == input$Producto) %>% 
+            datosModelo <- dplyr::select(.data = dataArima(), Regi贸n, Estaci贸n, Producto, Fecha, Pesos) %>%
+              dplyr::filter(Regi贸n == input$Regi贸n, Estaci贸n == input$Estaci贸n, Producto == input$Producto) %>% 
               dplyr::group_by(Fecha) %>% 
               dplyr::summarise(Ventas = sum(Pesos))
             
@@ -2084,10 +2084,10 @@ library(lubridate)
           
         }else{
           
-          a駉 <- as.numeric(strftime(min(DatosArimaP()), format = "%Y"))
+          a帽o <- as.numeric(strftime(min(DatosArimaP()), format = "%Y"))
           mes <- as.numeric(strftime( min(DatosArimaP()), format = "%m"))
           
-          datosModelo1 <- ts(DatosArima(), frequency = 12, start = c(a駉,mes))
+          datosModelo1 <- ts(DatosArima(), frequency = 12, start = c(a帽o,mes))
           modeloP <- forecast::auto.arima(DatosArima())
           modelo <- forecast::auto.arima(datosModelo1)
           pronosticos <- input$pronosticos
@@ -2154,7 +2154,7 @@ library(lubridate)
           color = "#e33575",
           fillcolor = "#e33575"),
         mode = "lines",
-        name = "predicci髇",
+        name = "predicci贸n",
         type = "scatter",
         x= x[1:pronosticos],
         y= pronostico95$mean,
@@ -2240,10 +2240,10 @@ library(lubridate)
           
         }else{
           
-          a駉 <- as.numeric(strftime(min(DatosArimaP()), format = "%Y"))
+          a帽o <- as.numeric(strftime(min(DatosArimaP()), format = "%Y"))
           mes <- as.numeric(strftime( min(DatosArimaP()), format = "%m"))
           
-          datosModelo1 <- ts(DatosArima(), frequency = 12, start = c(a駉,mes))
+          datosModelo1 <- ts(DatosArima(), frequency = 12, start = c(a帽o,mes))
           modeloP <- forecast::auto.arima(DatosArima())
           modelo <- forecast::auto.arima(datosModelo1)
           pronosticos <- input$pronosticos
@@ -2288,10 +2288,10 @@ library(lubridate)
           
         }else{
           
-          a駉 <- as.numeric(strftime(min(DatosArimaP()), format = "%Y"))
+          a帽o <- as.numeric(strftime(min(DatosArimaP()), format = "%Y"))
           mes <- as.numeric(strftime( min(DatosArimaP()), format = "%m"))
           
-          datosModelo1 <- ts(DatosArima(), frequency = 12, start = c(a駉, mes))
+          datosModelo1 <- ts(DatosArima(), frequency = 12, start = c(a帽o, mes))
           modelo <- forecast::auto.arima(datosModelo1)
           modelo <- modelo$arma
           
@@ -2306,35 +2306,35 @@ library(lubridate)
     output$tablaPronostico <- renderTable(TablaArima(), rownames = TRUE)
     output$Descarga <- downloadHandler(
       filename = function(){
-        paste("PronosticoVentas-(",input$Regi髇, input$Producto, input$Estaci髇, ")", ".csv", sep = "")},
+        paste("PronosticoVentas-(",input$Regi贸n, input$Producto, input$Estaci贸n, ")", ".csv", sep = "")},
       content = function(file) {
         write.csv(TablaArima(), file)})
     output$modelo <- renderText(Modelo())
     
-    #Correlaci髇
+    #Correlaci贸n
     
-    datosCorrelaci髇 <- reactive({
+    datosCorrelaci贸n <- reactive({
       
-      data <- dplyr::select(.data = datos, Estaci髇, Producto, Pesos, PrecioLitro) %>% 
-        dplyr::group_by(Estaci髇, Producto) %>% 
-        dplyr::summarise(Correlaci髇 = cor(Pesos, PrecioLitro)) %>% 
-        dplyr::arrange(Correlaci髇)
+      data <- dplyr::select(.data = datos, Estaci贸n, Producto, Pesos, PrecioLitro) %>% 
+        dplyr::group_by(Estaci贸n, Producto) %>% 
+        dplyr::summarise(Correlaci贸n = cor(Pesos, PrecioLitro)) %>% 
+        dplyr::arrange(Correlaci贸n)
       
-      data$Correlaci髇[is.na(data$Correlaci髇)] <- 0
+      data$Correlaci贸n[is.na(data$Correlaci贸n)] <- 0
       
       data <- data.frame(data)
       
       data <- dplyr::filter(.data = data, 
-                            Estaci髇 == input$Estaci髇2,
+                            Estaci贸n == input$Estaci贸n2,
                             Producto == input$Producto2)
       
-      print(paste0("Los datos tienen una correlaci髇 de ", round(data$Correlaci髇, 5)))
+      print(paste0("Los datos tienen una correlaci贸n de ", round(data$Correlaci贸n, 5)))
       
     })
     grafica7 <- reactive({
       
-      data1 <- dplyr::select(.data = datos, Estaci髇, Producto, Pesos, PrecioLitro) %>% 
-        dplyr::filter(Estaci髇 == input$Estaci髇2, Producto == input$Producto2)
+      data1 <- dplyr::select(.data = datos, Estaci贸n, Producto, Pesos, PrecioLitro) %>% 
+        dplyr::filter(Estaci贸n == input$Estaci贸n2, Producto == input$Producto2)
       
       m <- loess(Pesos ~ PrecioLitro, data = data1)
       
@@ -2358,7 +2358,7 @@ library(lubridate)
                     line = list(color = 'rgba(227, 53, 117, 0.05)'),
                     fillcolor = 'rgba(227, 53, 117, 0.33)',
                     showlegend = FALSE) %>% 
-        layout(title = "Relaci髇 entre Precio vs Ventas",
+        layout(title = "Relaci贸n entre Precio vs Ventas",
                xaxis = list(title = "Precio por litro"), 
                yaxis = list(title = "Ventas"),
                plot_bgcolor = "#272c30",
@@ -2369,8 +2369,8 @@ library(lubridate)
     })
     grafica8 <- reactive({
       
-      data2 <- dplyr::select(.data = datos, Estaci髇, Producto, Fecha, Pesos, PrecioLitro) %>% 
-        dplyr::filter(Estaci髇 == input$Estaci髇2, Producto == input$Producto2)
+      data2 <- dplyr::select(.data = datos, Estaci贸n, Producto, Fecha, Pesos, PrecioLitro) %>% 
+        dplyr::filter(Estaci贸n == input$Estaci贸n2, Producto == input$Producto2)
       
       
       grafica <- plot_ly( data=data2, 
@@ -2378,7 +2378,7 @@ library(lubridate)
                           y = ~PrecioLitro,
                           type = 'scatter', 
                           mode = 'lines') %>%
-                  layout( title = "Variaci髇 del Precio",
+                  layout( title = "Variaci贸n del Precio",
                           xaxis = list(title = "Fecha"), 
                           yaxis = list(title = "Precio por Litro"),
                           plot_bgcolor = "#272c30", 
@@ -2389,8 +2389,8 @@ library(lubridate)
     })
     
 
-    output$correlaci髇 <- renderText(datosCorrelaci髇())
-    output$Correlaci髇Plot <- renderPlotly(grafica7())
+    output$correlaci贸n <- renderText(datosCorrelaci贸n())
+    output$Correlaci贸nPlot <- renderPlotly(grafica7())
     output$Precio <- renderPlotly(grafica8())
     
     
