@@ -1,7 +1,15 @@
 FROM r-base
-WORKDIR /shell
-COPY . ./
+
+WORKDIR /app
+
+ADD bootstrap.sh .
+ADD packages.R .
+
 RUN chmod +x bootstrap.sh
 RUN ./bootstrap.sh
-ENV PORT 8080
-CMD ["Rscript", "gasolina.R"]
+
+COPY . .
+
+ENV PORT=8080
+
+CMD ["Rscript", "app.R"]
